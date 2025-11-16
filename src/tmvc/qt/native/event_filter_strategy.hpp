@@ -14,7 +14,7 @@
 #include <type_traits>
 
 
-namespace tmvc::qt::plain_text {
+namespace tmvc::qt::native {
 
 
 /// Plain text view strategy that installs event filter of specified type

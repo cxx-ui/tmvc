@@ -11,7 +11,7 @@
 #include "../impl/key_controller.hpp"
 
 
-namespace tmvc::qt::plain_text {
+namespace tmvc::qt::native {
 
 
 template <text_model TextModel, selection_controller_with_select_text_for<TextModel> Controller>

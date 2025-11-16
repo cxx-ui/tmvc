@@ -13,7 +13,7 @@
 #include "../../single_selection_model.hpp"
 
 
-namespace tmvc::qt::plain_text {
+namespace tmvc::qt::native {
 
 
 /// Selection strategy for core plain text view which uses selection model
@@ -92,10 +92,10 @@ public:
 
 namespace tmvc::qt {
     template <typename TextModel>
-    using ro_plain_selectable_text_view = plain_text::ro_selectable_view<TextModel>;
+    using ro_plain_selectable_text_view = native::ro_selectable_view<TextModel>;
 
     template <typename TextModel>
-    using plain_selectable_text_view = plain_text::selectable_view<TextModel>;
+    using plain_selectable_text_view = native::selectable_view<TextModel>;
 }
 
 

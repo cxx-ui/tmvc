@@ -15,7 +15,7 @@
 #include "../../selection_controller.hpp"
 
 
-namespace tmvc::qt::plain_text {
+namespace tmvc::qt::native {
 
 
 /// Selection strategy for core plain text view that displays selection from selection
@@ -163,7 +163,7 @@ public:
 
 namespace tmvc::qt {
     template <text_model TextModel, selection_controller_for<TextModel> Controller>
-    using plain_controllable_text_view = plain_text::controllable_view<TextModel, Controller>;
+    using plain_controllable_text_view = native::controllable_view<TextModel, Controller>;
 }
 
 

@@ -10,7 +10,7 @@
 #include "main_window.hpp"
 #include "../../text_view.hpp"
 #include "../../label_text_view.hpp"
-#include "../../plain_text_view.hpp"
+#include "../../native_plain_text_view.hpp"
 #include <codecvt>
 #include <filesystem>
 #include <fstream>
@@ -53,7 +53,7 @@ main_window::main_window() {
 
         vlayout->addWidget(new QLabel{tr("<b>Plain Text View</b>")});
 
-        auto text_view = new tmvc::qt::plain_text_view<tmvc::wsimple_text_model>{text_};
+        auto text_view = new tmvc::qt::native_plain_text_view<tmvc::wsimple_text_model>{text_};
         text_view->setWordWrapMode(QTextOption::NoWrap);
         text_view->setFont(fnt);
         vlayout->addWidget(text_view);

@@ -14,7 +14,7 @@
 #include <QPlainTextEdit>
 
 
-namespace tmvc::qt::plain_text {
+namespace tmvc::qt::native {
 
 
 /// Text strategy for core plain text view which updates text in view when
@@ -125,10 +125,10 @@ public:
 
 namespace tmvc::qt {
     template <text_model TextModel>
-    using ro_plain_text_view = plain_text::ro_plain_text_view<TextModel>;
+    using native_ro_plain_text_view = native::ro_plain_text_view<TextModel>;
 
     template <text_model TextModel>
-    using plain_text_view = plain_text::plain_text_view<TextModel>;
+    using native_plain_text_view = native::plain_text_view<TextModel>;
 }
 
 

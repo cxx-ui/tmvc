@@ -15,7 +15,7 @@
 #include <QTextBlock>
 
 
-namespace tmvc::qt::plain_text {
+namespace tmvc::qt::native {
 
 
 class plain_text_view_base;
@@ -114,5 +114,5 @@ protected:
 
 
 namespace tmvc::qt {
-    using plain_text_view_base = plain_text::plain_text_view_base;
+    using plain_text_view_base = native::plain_text_view_base;
 }

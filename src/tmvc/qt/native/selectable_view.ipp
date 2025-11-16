@@ -8,7 +8,7 @@
 /// Contains implementation of the basic_selectable_view template and related types.
 
 
-namespace tmvc::qt::plain_text {
+namespace tmvc::qt::native {
 
 
 template <text_model TextModel>

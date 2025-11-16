@@ -13,7 +13,7 @@
 #include <iostream>
 
 
-namespace tmvc::qt::plain_text {
+namespace tmvc::qt::native {
 
 
 
