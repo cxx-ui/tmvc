@@ -20,26 +20,30 @@ namespace tmvc::qt::native {
 
 /// Selection strategy for core plain text view that displays selection from selection
 /// model, and uses selection controller to handle changes of selection in a view
-template <text_model TextModel, selection_controller_with_select_text_for<TextModel> Controller>
-class selection_controller_strategy: public single_selection_model_strategy<TextModel> {
+template <
+    typename QtTextEdit,
+    text_model TextModel,
+    selection_controller_with_select_text_for<TextModel> Controller
+>
+class selection_controller_strategy: public single_selection_model_strategy<QtTextEdit, TextModel> {
 public:
     /// Constructs strategy with specified references to selection model and controller
     selection_controller_strategy(single_selection_model<TextModel> & sel, Controller & cntrl):
-        single_selection_model_strategy<TextModel>{sel}, controller_{cntrl} {}
+        single_selection_model_strategy<QtTextEdit, TextModel>{sel}, controller_{cntrl} {}
 
     /// Initializes strategy for edit control. Connects to model and view signals.
-    void initialize(plain_text_view_base * view);
+    void initialize(core_view_base<QtTextEdit> * view);
 
 private:
     /// Called when selection changed in view
-    void on_view_selection_changed(plain_text_view_base * view);
+    void on_view_selection_changed(core_view_base<QtTextEdit> * view);
 
     Controller & controller_;       ///< Reference to selection controller
 };
 
 
 /// Event filter for handling key events and delegating them to selection controller
-template <selection_controller Controller>
+template <typename QtTextEdit, selection_controller Controller>
 class selection_controller_key_event_filter: public QObject {
 public:
     /// Constructs event filter with specified pointer to view and
@@ -48,7 +52,7 @@ public:
         controller_{cntrl} {}
 
     /// Filter initialization function. Does nothing
-    void initialize(plain_text_view_base * view) {}
+    void initialize(core_view_base<QtTextEdit> * view) {}
 
 protected:
     /// Filters and handles key event for text view
@@ -60,14 +64,16 @@ private:
 
 
 /// Text view strategy for handling key events and delegating them to selection controller
-template <selection_controller Controller>
-using selection_controller_key_strategy =
-    event_filter_strategy<selection_controller_key_event_filter<Controller>>;
+template <typename QtTextEdit, selection_controller Controller>
+using selection_controller_key_strategy = event_filter_strategy <
+    QtTextEdit,
+    selection_controller_key_event_filter<QtTextEdit, Controller>
+>;
 
 
 /// Event filter for handling key events in text view and delegating them to edit controller.
 /// Also handles focus in event and setting overwrite mode for view.
-template <edit_controller Controller>
+template <typename QtTextEdit, edit_controller Controller>
 class edit_controller_key_event_filter: public QObject {
 public:
     /// Constructs event filter with specified pointer to view
@@ -76,26 +82,28 @@ public:
         controller_{cntrl} {}
 
     /// Filter initialization functions. Set view overwrite mode
-    void initialize(plain_text_view_base * view);
+    void initialize(core_view_base<QtTextEdit> * view);
 
 protected:
     /// Intercepts and handles key event for text view
     bool eventFilter(QObject * obj, QEvent * event) override;
 
 private:
-    Controller & controller_;                   ///< Reference to edit controller
-    plain_text_view_base * view_ = nullptr;     ///< Pointer to text view
+    Controller & controller_;                           ///< Reference to edit controller
+    core_view_base<QtTextEdit> * view_ = nullptr; ///< Pointer to text view
 };
 
 
 /// Text view strategy for handling key events and delegating them to edit controller
-template <edit_controller Controller>
-using edit_controller_key_strategy =
-    event_filter_strategy<edit_controller_key_event_filter<Controller>>;
+template <typename QtTextEdit, edit_controller Controller>
+using edit_controller_key_strategy = event_filter_strategy <
+    QtTextEdit,
+    edit_controller_key_event_filter<QtTextEdit, Controller>
+>;
 
 
 /// Text view strategy that displays custom context menu created by selection controller
-template <selection_controller Controller>
+template <typename QtTextEdit, selection_controller Controller>
 class selection_controller_menu_strategy {
 public:
     /// Constructs strategy with specified reference to selection controller
@@ -103,7 +111,7 @@ public:
         controller_{cntrl} {}
 
     /// Initializes strategy
-    void initialize(plain_text_view_base * view);
+    void initialize(core_view_base<QtTextEdit> * view);
 
 protected:
     /// Adds custom menu actions into context menu
@@ -118,36 +126,57 @@ private:
 
 
 /// Helper class for selecting controller key strategy based on controller type
-template <selection_controller Controller>
+template <typename QtTextEdit, selection_controller Controller>
 struct controller_key_strategy {
     /// Default is key strategy for selection controller
-    using type = selection_controller_key_strategy<Controller>;
+    using type = selection_controller_key_strategy<QtTextEdit, Controller>;
 };
 
 /// Key strategy selection for edit controller
-template <edit_controller Controller>
-struct controller_key_strategy<Controller> {
-    using type = edit_controller_key_strategy<Controller>;
+template <typename QtTextEdit, edit_controller Controller>
+struct controller_key_strategy<QtTextEdit, Controller> {
+    using type = edit_controller_key_strategy<QtTextEdit, Controller>;
 };
 
-template <selection_controller Controller>
-using controller_key_strategy_t = typename controller_key_strategy<Controller>::type;
+template <typename QtTextEdit, selection_controller Controller>
+using controller_key_strategy_t = typename controller_key_strategy<QtTextEdit, Controller>::type;
 
 
-template <text_model TextModel, selection_controller_with_select_text_for<TextModel> Controller>
+template <
+    typename QtTextEdit,
+    text_model TextModel,
+    selection_controller_with_select_text_for<TextModel> Controller
+>
 using controllable_view_base = core_view <
+    QPlainTextEdit,
     !edit_controller<Controller>,        // is read only?
-    controller_key_strategy_t<Controller>,
-    view_text_update_strategy<TextModel>,
-    selection_controller_strategy<TextModel, Controller>,
-    selection_controller_menu_strategy<Controller>
+    controller_key_strategy_t<QPlainTextEdit, Controller>,
+    view_text_update_strategy<QPlainTextEdit, TextModel>,
+    selection_controller_strategy<QPlainTextEdit, TextModel, Controller>,
+    selection_controller_menu_strategy<QPlainTextEdit, Controller>
 >;
 
 
 /// Plain text view that also uses selection model to store current selection
 /// and selection controller to handle user input
 template <text_model TextModel, selection_controller_with_select_text_for<TextModel> Controller>
-class controllable_view: public controllable_view_base<TextModel, Controller> {
+class plain_controllable_view: public controllable_view_base<QPlainTextEdit, TextModel, Controller> {
+public:
+    /// Constructs view with specified references to text and selection models,
+    /// selection controller, and pointer to parent widget
+    plain_controllable_view(TextModel & txt,
+                            single_selection_model<TextModel> & sel,
+                            Controller & cntrl,
+                            QWidget * parent = nullptr):
+        controllable_view_base<QPlainTextEdit, TextModel, Controller>{
+            parent, {cntrl}, {txt}, {sel, cntrl}, {cntrl}} {}
+};
+
+
+/// Rich text view that also uses selection model to store current selection
+/// and selection controller to handle user input
+template <text_model TextModel, selection_controller_with_select_text_for<TextModel> Controller>
+class controllable_view: public controllable_view_base<QTextEdit, TextModel, Controller> {
 public:
     /// Constructs view with specified references to text and selection models,
     /// selection controller, and pointer to parent widget
@@ -155,15 +184,11 @@ public:
                       single_selection_model<TextModel> & sel,
                       Controller & cntrl,
                       QWidget * parent = nullptr):
-        controllable_view_base<TextModel, Controller>{parent, {cntrl}, {txt}, {sel, cntrl}, {cntrl}} {}
+        controllable_view_base<QTextEdit, TextModel, Controller>{
+            parent, {cntrl}, {txt}, {sel, cntrl}, {cntrl}} {}
 };
 
-}
 
-
-namespace tmvc::qt {
-    template <text_model TextModel, selection_controller_for<TextModel> Controller>
-    using plain_controllable_text_view = native::controllable_view<TextModel, Controller>;
 }
 
 

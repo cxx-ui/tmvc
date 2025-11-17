@@ -17,8 +17,10 @@ namespace tmvc::qt::native {
 
 
 
-template <text_model TextModel>
-void view_text_update_strategy<TextModel>::initialize(plain_text_view_base * view) {
+template <typename QtTextEdit, text_model TextModel>
+void view_text_update_strategy<QtTextEdit, TextModel>::initialize(
+        core_view_base<QtTextEdit> * view) {
+
     // setting text in view
     view->setPlainText(impl::std_string_to_qstring(characters_str(text_)));
 
@@ -35,8 +37,10 @@ void view_text_update_strategy<TextModel>::initialize(plain_text_view_base * vie
 }
 
 
-template <text_model TextModel>
-void view_text_update_strategy<TextModel>::on_model_inserted(plain_text_view_base * view, const range & r) {
+template <typename QtTextEdit, text_model TextModel>
+void view_text_update_strategy<QtTextEdit, TextModel>::on_model_inserted(
+        core_view_base<QtTextEdit> * view, const range & r) {
+
     if (ignore_model_changes_) {
         return;
     }
@@ -49,8 +53,10 @@ void view_text_update_strategy<TextModel>::on_model_inserted(plain_text_view_bas
 }
 
 
-template <text_model TextModel>
-void view_text_update_strategy<TextModel>::on_model_erased(plain_text_view_base * view, const range & r) {
+template <typename QtTextEdit, text_model TextModel>
+void view_text_update_strategy<QtTextEdit, TextModel>::on_model_erased(
+        core_view_base<QtTextEdit> * view, const range & r) {
+
     if (ignore_model_changes_) {
         return;
     }
@@ -61,8 +67,10 @@ void view_text_update_strategy<TextModel>::on_model_erased(plain_text_view_base 
 }
 
 
-template <text_model TextModel>
-void view_text_update_strategy<TextModel>::on_model_replaced(plain_text_view_base * view, const range & r) {
+template <typename QtTextEdit, text_model TextModel>
+void view_text_update_strategy<QtTextEdit, TextModel>::on_model_replaced(
+        core_view_base<QtTextEdit> * view, const range & r) {
+
     if (ignore_model_changes_) {
         return;
     }
@@ -82,8 +90,10 @@ void view_text_update_strategy<TextModel>::on_model_replaced(plain_text_view_bas
 ////////////////////////////////////////////////////////////////////////////////
 
 
-template <editable_text_model TextModel>
-void model_text_update_strategy<TextModel>::initialize(plain_text_view_base * view) {
+template <typename QtTextEdit, editable_text_model TextModel>
+void model_text_update_strategy<QtTextEdit, TextModel>::initialize(
+        core_view_base<QtTextEdit> * view) {
+
     // connecting to model signals in base class
     base_t::initialize(view);
 

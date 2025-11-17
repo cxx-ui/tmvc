@@ -8,9 +8,7 @@
 /// Contains implementation of the main_window class.
 
 #include "main_window.hpp"
-#include "../../text_view.hpp"
-#include "../../label_text_view.hpp"
-#include "../../native_plain_text_view.hpp"
+#include "../../native_text_view.hpp"
 #include <codecvt>
 #include <filesystem>
 #include <fstream>
@@ -18,6 +16,7 @@
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QMenuBar>
 #include <QMenu>
 #include <QMessageBox>
@@ -39,21 +38,9 @@ main_window::main_window() {
         auto vlayout = new QVBoxLayout;
         layout->addLayout(vlayout, 0, 0, 1, 1);
 
-        vlayout->addWidget(new QLabel{tr("<b>Label Text View</b>")});
+        vlayout->addWidget(new QLabel{tr("<b>RO Rich Text View</b>")});
 
-        auto label_view = new tmvc::qt::label_text_view(text_);
-        label_view->setFont(fnt);
-        label_view->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        vlayout->addWidget(label_view, 1);
-    }
-
-    {
-        auto vlayout = new QVBoxLayout;
-        layout->addLayout(vlayout, 0, 1, 1, 1);
-
-        vlayout->addWidget(new QLabel{tr("<b>Plain Text View</b>")});
-
-        auto text_view = new tmvc::qt::native_plain_text_view<tmvc::wsimple_text_model>{text_};
+        auto text_view = new tmvc::qt::ro_native_text_view<tmvc::wsimple_text_model>{text_};
         text_view->setWordWrapMode(QTextOption::NoWrap);
         text_view->setFont(fnt);
         vlayout->addWidget(text_view);
@@ -61,11 +48,11 @@ main_window::main_window() {
 
     {
         auto vlayout = new QVBoxLayout;
-        layout->addLayout(vlayout, 0, 2, 1, 1);
+        layout->addLayout(vlayout, 0, 1, 1, 1);
 
-        vlayout->addWidget(new QLabel{tr("<b>Plain Selectable Text View</b>")});
+        vlayout->addWidget(new QLabel{tr("<b>RO Rich Selectable Text View</b>")});
 
-        using view_t = tmvc::qt::native_plain_selectable_text_view<text_model_t>;
+        using view_t = tmvc::qt::ro_native_selectable_text_view<text_model_t>;
         auto text_view = new view_t{text_, plain_selection_};
         text_view->setFont(fnt);
         text_view->setWordWrapMode(QTextOption::NoWrap);
@@ -74,29 +61,18 @@ main_window::main_window() {
 
     {
         auto vlayout = new QVBoxLayout;
-        layout->addLayout(vlayout, 0, 3, 1, 1);
+        layout->addLayout(vlayout, 0, 2, 1, 1);
 
-        vlayout->addWidget(new QLabel{tr("<b>Plain Controllable View</b>")});
+        vlayout->addWidget(new QLabel{tr("<b>Rich Controllable View</b>")});
 
-        using view_t = tmvc::qt::native_plain_controllable_text_view <
+        using view_t = tmvc::qt::native_controllable_text_view <
             text_model_t,
-            plain_controller_t
+            controller_t
         >;
         auto text_view = new view_t{text_, plain_selection_, plain_controller_};
         text_view->setFont(fnt);
         text_view->setWordWrapMode(QTextOption::NoWrap);
         vlayout->addWidget(text_view);
-    }
-
-    {
-        auto vlayout = new QVBoxLayout;
-        layout->addLayout(vlayout, 1, 3, 1, 1);
-
-        vlayout->addWidget(new QLabel{tr("<b>Text View (advanced)</b>")});
-
-        auto text_viewer = new tmvc::qt::text_view{text_, selection_, viewport_pos_, controller_};
-        text_viewer->setFont(fnt);
-        vlayout->addWidget(text_viewer);
     }
 
     auto file_menu = this->menuBar()->addMenu("File");

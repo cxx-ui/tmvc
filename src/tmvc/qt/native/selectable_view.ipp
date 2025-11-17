@@ -11,8 +11,10 @@
 namespace tmvc::qt::native {
 
 
-template <text_model TextModel>
-void single_selection_model_strategy<TextModel>::initialize(plain_text_view_base * view) {
+template <typename QtTextEdit, text_model TextModel>
+void single_selection_model_strategy<QtTextEdit, TextModel>::initialize(
+        core_view_base<QtTextEdit> * view) {
+
     // setting initial position in view
     on_model_changed(view);
     {
@@ -27,17 +29,19 @@ void single_selection_model_strategy<TextModel>::initialize(plain_text_view_base
     });
 
     // listening for cursor position change and anchor change in text widget and updating model
-    QObject::connect(view, &QPlainTextEdit::cursorPositionChanged, [this, view] {
+    QObject::connect(view, &QtTextEdit::cursorPositionChanged, [this, view] {
         on_view_changed(view);
     });
-    QObject::connect(view, &QPlainTextEdit::selectionChanged, [this, view] {
+    QObject::connect(view, &QtTextEdit::selectionChanged, [this, view] {
         on_view_changed(view);
     });
 }
 
 
-template <text_model TextModel>
-void single_selection_model_strategy<TextModel>::on_model_changed(plain_text_view_base * view) {
+template <typename QtTextEdit, text_model TextModel>
+void single_selection_model_strategy<QtTextEdit, TextModel>::on_model_changed(
+        core_view_base<QtTextEdit> * view) {
+
     // setting update flag to prevent model updates in other strategies
     view->set_is_updating_view(true);
 
@@ -49,8 +53,10 @@ void single_selection_model_strategy<TextModel>::on_model_changed(plain_text_vie
 }
 
 
-template <text_model TextModel>
-void single_selection_model_strategy<TextModel>::on_view_changed(plain_text_view_base * view) {
+template <typename QtTextEdit, text_model TextModel>
+void single_selection_model_strategy<QtTextEdit, TextModel>::on_view_changed(
+        core_view_base<QtTextEdit> * view) {
+
     // don't change model if we are updating view now
     if (view->is_updating_view()) {
         return;

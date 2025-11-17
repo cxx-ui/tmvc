@@ -13,13 +13,15 @@
 #include <QPlainTextEdit>
 #include <QTextBlock>
 #include <QTextCursor>
+#include <QTextEdit>
 
 
 namespace tmvc::qt::impl {
 
 
 /// Returns Qt text cursor from QPlainTextEdit for specified selection
-inline QTextCursor get_qt_cursor_for_selection(QPlainTextEdit * edit,
+template <typename QtTextEdit>
+inline QTextCursor get_qt_cursor_for_selection(QtTextEdit * edit,
                                                const position & anchor_pos,
                                                const position & pos) {
     auto cursor = edit->textCursor();
@@ -30,7 +32,7 @@ inline QTextCursor get_qt_cursor_for_selection(QPlainTextEdit * edit,
     // moving up or down to specific anchor line
     auto mdlAnchorLine = static_cast<int>(anchor_pos.line);
     auto widgetLine = cursor.blockNumber();
-    assert(mdlAnchorLine < edit->blockCount() && "invalid position line number");
+    assert(mdlAnchorLine < edit->document()->blockCount() && "invalid position line number");
     if (widgetLine < mdlAnchorLine) {
         cursor.movePosition(QTextCursor::NextBlock,
                             QTextCursor::MoveAnchor,
@@ -69,8 +71,10 @@ inline QTextCursor get_qt_cursor_for_selection(QPlainTextEdit * edit,
 }
 
 
-/// Calculates selection anchor and current position from cursor position in QPlainTextEdit
-inline std::tuple<position, position> get_selection_from_text_edit(QPlainTextEdit * edit) {
+/// Calculates selection anchor and current position from cursor position
+/// in QPlainTextEdit or QTextEdit
+template <typename QtTextEdit>
+inline std::tuple<position, position> get_selection_from_text_edit(QtTextEdit * edit) {
     auto cursor = edit->textCursor();
 
     // getting anchor line and column

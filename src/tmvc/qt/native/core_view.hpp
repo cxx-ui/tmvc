@@ -18,15 +18,16 @@
 namespace tmvc::qt::native {
 
 
-class plain_text_view_base;
+template <typename QtTextEdit>
+class core_view_base;
 
 
 /// Concept representing piece of logic of interacting with text view widget.
 /// Contains single initialize function that performs setup of text view
 /// and associated signal and event handlers.
-template <typename Strategy>
+template <typename Strategy, typename QtTextEdit>
 concept core_plain_text_view_strategy = std::is_move_constructible_v<Strategy> &&
-requires(Strategy & strategy, plain_text_view_base * view) {
+requires(Strategy & strategy, core_view_base<QtTextEdit> * view) {
     // initializes handlers for specified pointer to text view
     strategy.initialize(view);
 };
@@ -34,11 +35,12 @@ requires(Strategy & strategy, plain_text_view_base * view) {
 
 /// Base class for all core_view instantiations. Contains
 /// common data and logic to synchronizing between strategies.
-class plain_text_view_base: public QPlainTextEdit {
+template <typename QtTextEdit>
+class core_view_base: public QtTextEdit {
 public:
     /// Constructs text view with specified pointer to parent widget
-    plain_text_view_base(QWidget * parent = nullptr):
-        QPlainTextEdit{parent} {}
+    core_view_base(QWidget * parent = nullptr):
+        QtTextEdit{parent} {}
 
     /// Returns true if text view is being updated now
     bool is_updating_view() const { return is_updating_view_; }
@@ -51,15 +53,17 @@ private:
 };
 
 
-/// Qt plain text view that uses QPlainTextEdit to display text
+/// Qt plain text view that uses QTextEdit or QPlainTextEdit to display text
 /// and customizable strategies to handle selection, user input, and menus.
 template <
+    typename QtTextEdit,
     bool ReadOnly,
-    core_plain_text_view_strategy ... Strategies
+    core_plain_text_view_strategy<QtTextEdit> ... Strategies
 >
-class core_view: public plain_text_view_base, Strategies... {
+class core_view: public core_view_base<QtTextEdit>, Strategies... {
     /// Type of this class
     using this_type = core_view <
+        QtTextEdit,
         ReadOnly,
         Strategies...
     >;
@@ -71,7 +75,7 @@ public:
     /// Constructs view with specified reference to text model, key handle strategy,
     /// and pointer to parent widget
     core_view(QWidget * parent, Strategies && ... strategies):
-    plain_text_view_base{parent},
+    core_view_base<QtTextEdit>{parent},
     Strategies{std::move(strategies)}... {
         // setting read only flag
         this->setReadOnly(ReadOnly);
@@ -81,10 +85,10 @@ public:
 
         // repainting widget when current selection changes. This is needed to
         // repaint rectangle for current line
-        QObject::connect(this, &QPlainTextEdit::cursorPositionChanged, [this] {
+        QObject::connect(this, &QtTextEdit::cursorPositionChanged, [this] {
             this->viewport()->update();
         });
-        QObject::connect(this, &QPlainTextEdit::selectionChanged, [this] {
+        QObject::connect(this, &QtTextEdit::selectionChanged, [this] {
             this->viewport()->update();
         });
     }
@@ -93,26 +97,23 @@ protected:
     /// Processes paint event. Draws additional rectangle for current line
     void paintEvent(QPaintEvent * event) override {
         // painting text edit
-        QPlainTextEdit::paintEvent(event);
+        QtTextEdit::paintEvent(event);
 
-        // highlighting current line with rect if selection is empty
-        if (!this->textCursor().hasSelection()) {
-            auto currentLineRect = this->blockBoundingGeometry(this->textCursor().block());
-            auto offs = this->contentOffset();
-            currentLineRect.translate(offs);
-            currentLineRect.setRight(this->viewport()->width() - static_cast<int>(this->contentOffset().rx()));
+        if constexpr (std::same_as<QtTextEdit, QPlainTextEdit>) {
+            // highlighting current line with rect if selection is empty
+            if (!this->textCursor().hasSelection()) {
+                auto currentLineRect = this->blockBoundingGeometry(this->textCursor().block());
+                auto offs = this->contentOffset();
+                currentLineRect.translate(offs);
+                currentLineRect.setRight(this->viewport()->width() - static_cast<int>(this->contentOffset().rx()));
 
-            QPainter painter{this->viewport()};
-            painter.setPen(QPen{QBrush{QColor{Qt::lightGray}}, 1});
-            painter.drawRect(currentLineRect);
+                QPainter painter{this->viewport()};
+                painter.setPen(QPen{QBrush{QColor{Qt::lightGray}}, 1});
+                painter.drawRect(currentLineRect);
+            }
         }
     }
 };
 
 
-}
-
-
-namespace tmvc::qt {
-    using plain_text_view_base = native::plain_text_view_base;
 }

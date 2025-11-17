@@ -6,4 +6,5 @@ if(NOT "${TMVC_QT_ENABLE_EXAMPLES}")
 endif()
 
 add_subdirectory(text_view_example)
+add_subdirectory(rich_text_view_example)
 add_subdirectory(document_view_example)

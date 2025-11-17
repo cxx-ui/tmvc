@@ -18,7 +18,7 @@ namespace tmvc::qt::native {
 
 
 /// Plain text view strategy that installs event filter of specified type
-template <typename EventFilter>
+template <typename QtTextEdit, typename EventFilter>
 class event_filter_strategy {
 public:
     /// Constructs strategy from arguments which are passed to event filter constructor
@@ -28,7 +28,7 @@ public:
         filter_(std::make_unique<EventFilter>(args...)) {}
 
     /// Initializes event filter and installs it into text view
-    void initialize(plain_text_view_base * view) {
+    void initialize(core_view_base<QtTextEdit> * view) {
         filter_->initialize(view);
         view->installEventFilter(filter_.get());
     }

@@ -14,10 +14,16 @@
 namespace tmvc::qt::native {
 
 
-template <text_model TextModel, selection_controller_with_select_text_for<TextModel> Controller>
-void selection_controller_strategy<TextModel, Controller>::initialize(plain_text_view_base * view) {
+template <
+    typename QtTextEdit,
+    text_model TextModel,
+    selection_controller_with_select_text_for<TextModel> Controller
+>
+void selection_controller_strategy<QtTextEdit, TextModel, Controller>::initialize(
+        core_view_base<QtTextEdit> * view) {
+
     // connecting to model signals in base strategy
-    single_selection_model_strategy<TextModel>::initialize(view);
+    single_selection_model_strategy<QtTextEdit, TextModel>::initialize(view);
 
     // listening for selection and anchor changes
     QObject::connect(view, &QPlainTextEdit::cursorPositionChanged, [this, view] {
@@ -28,8 +34,14 @@ void selection_controller_strategy<TextModel, Controller>::initialize(plain_text
     });
 }
 
-template <text_model TextModel, selection_controller_with_select_text_for<TextModel> Controller>
-void selection_controller_strategy<TextModel, Controller>::on_view_selection_changed(plain_text_view_base * view) {
+template <
+    typename QtTextEdit,
+    text_model TextModel,
+    selection_controller_with_select_text_for<TextModel> Controller
+>
+void selection_controller_strategy<QtTextEdit, TextModel, Controller>::on_view_selection_changed(
+        core_view_base<QtTextEdit> * view) {
+
     // don't update model if we are updating view now
     if (view->is_updating_view()) {
         return;
@@ -47,8 +59,9 @@ void selection_controller_strategy<TextModel, Controller>::on_view_selection_cha
 ////////////////////////////////////////////////////////////////////////////////
 
 
-template <selection_controller Controller>
-bool selection_controller_key_event_filter<Controller>::eventFilter(QObject * obj, QEvent * event) {
+template <typename QtTextEdit, selection_controller Controller>
+bool selection_controller_key_event_filter<QtTextEdit, Controller>::eventFilter(QObject * obj,
+                                                                                QEvent * event) {
     if (event->type() != QEvent::KeyPress) {
         return false;
     }
@@ -61,8 +74,9 @@ bool selection_controller_key_event_filter<Controller>::eventFilter(QObject * ob
 ////////////////////////////////////////////////////////////////////////////////
 
 
-template <edit_controller Controller>
-bool edit_controller_key_event_filter<Controller>::eventFilter(QObject * obj, QEvent * event) {
+template <typename QtTextEdit, edit_controller Controller>
+bool edit_controller_key_event_filter<QtTextEdit, Controller>::eventFilter(QObject * obj,
+                                                                           QEvent * event) {
     using char_t = typename Controller::char_t;
 
     if (event->type() == QEvent::FocusIn) {
@@ -84,8 +98,10 @@ bool edit_controller_key_event_filter<Controller>::eventFilter(QObject * obj, QE
 }
 
 
-template <edit_controller Controller>
-void edit_controller_key_event_filter<Controller>::initialize(plain_text_view_base * view) {
+template <typename QtTextEdit, edit_controller Controller>
+void edit_controller_key_event_filter<QtTextEdit, Controller>::initialize(
+        core_view_base<QtTextEdit> * view) {
+
     view_ = view;
     view_->setOverwriteMode(controller_.is_overwrite_mode());
 }
@@ -95,8 +111,10 @@ void edit_controller_key_event_filter<Controller>::initialize(plain_text_view_ba
 
 
 
-template <selection_controller Controller>
-void selection_controller_menu_strategy<Controller>::initialize(plain_text_view_base * view) {
+template <typename QtTextEdit, selection_controller Controller>
+void selection_controller_menu_strategy<QtTextEdit, Controller>::initialize(
+        core_view_base<QtTextEdit> * view) {
+
     view->setContextMenuPolicy(Qt::CustomContextMenu);
     QObject::connect(view, &QWidget::customContextMenuRequested, [this, view](const QPoint & pos) {
         on_menu_event(view->mapToGlobal(pos));
@@ -104,9 +122,10 @@ void selection_controller_menu_strategy<Controller>::initialize(plain_text_view_
 }
 
 
-template <selection_controller Controller>
-void selection_controller_menu_strategy<Controller>::on_menu_event(const QPoint & pos) {
-    auto menu = impl::create_qt_menu_from_context_menu(controller_.create_context_menu(), controller_);
+template <typename QtTextEdit, selection_controller Controller>
+void selection_controller_menu_strategy<QtTextEdit, Controller>::on_menu_event(const QPoint & pos) {
+    auto menu = impl::create_qt_menu_from_context_menu(controller_.create_context_menu(),
+                                                       controller_);
     add_custom_menu_actions(menu.get());
     menu->exec(pos);
 }
