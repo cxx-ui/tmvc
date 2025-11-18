@@ -51,9 +51,15 @@ main_window::main_window() {
         auto vlayout = new QVBoxLayout;
         layout->addLayout(vlayout, 0, 1, 1, 1);
 
-        vlayout->addWidget(new QLabel{tr("<b>Plain Text View</b>")});
+        vlayout->addWidget(new QLabel{tr("<b>Plain Std Sel/Controller</b>")});
 
-        auto text_view = new tmvc::qt::native_plain_text_view<tmvc::wsimple_text_model>{text_};
+        using view_t = tmvc::qt::native::plain_text_view <
+            tmvc::wsimple_text_model,
+            tmvc::qt::native::std_selection_model,
+            tmvc::qt::native::std_edit_controller
+        >;
+
+        auto text_view = new view_t{text_};
         text_view->setWordWrapMode(QTextOption::NoWrap);
         text_view->setFont(fnt);
         vlayout->addWidget(text_view);
@@ -63,9 +69,14 @@ main_window::main_window() {
         auto vlayout = new QVBoxLayout;
         layout->addLayout(vlayout, 0, 2, 1, 1);
 
-        vlayout->addWidget(new QLabel{tr("<b>Plain Selectable Text View</b>")});
+        vlayout->addWidget(new QLabel{tr("<b>Plain Std Controller</b>")});
 
-        using view_t = tmvc::qt::native_plain_selectable_text_view<text_model_t>;
+        using view_t = tmvc::qt::native::plain_text_view <
+            tmvc::wsimple_text_model,
+            tmvc::single_selection_model<tmvc::wsimple_text_model>,
+            tmvc::qt::native::std_edit_controller
+        >;
+
         auto text_view = new view_t{text_, plain_selection_};
         text_view->setFont(fnt);
         text_view->setWordWrapMode(QTextOption::NoWrap);
@@ -76,12 +87,14 @@ main_window::main_window() {
         auto vlayout = new QVBoxLayout;
         layout->addLayout(vlayout, 0, 3, 1, 1);
 
-        vlayout->addWidget(new QLabel{tr("<b>Plain Controllable View</b>")});
+        vlayout->addWidget(new QLabel{tr("<b>Plain</b>")});
 
-        using view_t = tmvc::qt::native_plain_controllable_text_view <
-            text_model_t,
+        using view_t = tmvc::qt::native::plain_text_view <
+            tmvc::wsimple_text_model,
+            tmvc::single_selection_model<tmvc::wsimple_text_model>,
             plain_controller_t
         >;
+
         auto text_view = new view_t{text_, plain_selection_, plain_controller_};
         text_view->setFont(fnt);
         text_view->setWordWrapMode(QTextOption::NoWrap);

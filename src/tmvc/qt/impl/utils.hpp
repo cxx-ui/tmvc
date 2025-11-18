@@ -71,6 +71,15 @@ inline QTextCursor get_qt_cursor_for_selection(QtTextEdit * edit,
 }
 
 
+/// Calculates current position from cursor position
+inline position get_position_from_cursor(const QTextCursor & cursor) {
+    auto pos_line = cursor.blockNumber();
+    auto pos_col = cursor.positionInBlock();
+    return position{static_cast<size_t>(pos_line),
+                    static_cast<size_t>(pos_col)};
+}
+
+
 /// Calculates selection anchor and current position from cursor position
 /// in QPlainTextEdit or QTextEdit
 template <typename QtTextEdit>

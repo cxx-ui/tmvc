@@ -9,19 +9,15 @@
 
 #pragma once
 
-#include "native/controllable_view.hpp"
-#include "native/selectable_view.hpp"
-#include "native/plain_text_view.hpp"
+#include "native/text_view.hpp"
 
 
 namespace tmvc::qt {
-    /// Read only text view that uses QTextEdit to represent rich text model
-    template <text_model TextModel>
-    using ro_native_text_view = native::ro_text_view<TextModel>;
-
-    template <typename TextModel>
-    using ro_native_selectable_text_view = native::ro_selectable_view<TextModel>;
-
-    template <text_model TextModel, selection_controller_for<TextModel> Controller>
-    using native_controllable_text_view = native::controllable_view<TextModel, Controller>;
+    /// Qt native text view that uses QTextEdit for displaying text
+    template <
+        text_model Model,
+        native::qt_selection_model<Model> SelectionModel,
+        native::qt_selection_controller_for<Model> Controller
+    >
+    using native_text_view = native::text_view<Model, SelectionModel, Controller>;
 }

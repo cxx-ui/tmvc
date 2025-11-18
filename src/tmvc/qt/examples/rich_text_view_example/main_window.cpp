@@ -38,10 +38,15 @@ main_window::main_window() {
         auto vlayout = new QVBoxLayout;
         layout->addLayout(vlayout, 0, 0, 1, 1);
 
-        vlayout->addWidget(new QLabel{tr("<b>RO Rich Text View</b>")});
+        vlayout->addWidget(new QLabel{tr("<b>Rich Std Sel/Controller</b>")});
 
-        auto text_view = new tmvc::qt::ro_native_text_view<tmvc::wsimple_text_model>{text_};
-        text_view->setWordWrapMode(QTextOption::NoWrap);
+        using view_t = tmvc::qt::native::text_view <
+            text_model_t,
+            tmvc::qt::native::std_selection_model,
+            tmvc::qt::native::std_edit_controller
+        >;
+
+        auto text_view = new view_t{text_};
         text_view->setFont(fnt);
         vlayout->addWidget(text_view);
     }
@@ -50,12 +55,16 @@ main_window::main_window() {
         auto vlayout = new QVBoxLayout;
         layout->addLayout(vlayout, 0, 1, 1, 1);
 
-        vlayout->addWidget(new QLabel{tr("<b>RO Rich Selectable Text View</b>")});
+        vlayout->addWidget(new QLabel{tr("<b>Rich Std Controller</b>")});
 
-        using view_t = tmvc::qt::ro_native_selectable_text_view<text_model_t>;
-        auto text_view = new view_t{text_, plain_selection_};
+        using view_t = tmvc::qt::native::text_view <
+            text_model_t,
+            selection_model_t,
+            tmvc::qt::native::std_edit_controller
+        >;
+
+        auto text_view = new view_t{text_, selection_};
         text_view->setFont(fnt);
-        text_view->setWordWrapMode(QTextOption::NoWrap);
         vlayout->addWidget(text_view);
     }
 
@@ -63,15 +72,16 @@ main_window::main_window() {
         auto vlayout = new QVBoxLayout;
         layout->addLayout(vlayout, 0, 2, 1, 1);
 
-        vlayout->addWidget(new QLabel{tr("<b>Rich Controllable View</b>")});
+        vlayout->addWidget(new QLabel{tr("<b>Rich</b>")});
 
-        using view_t = tmvc::qt::native_controllable_text_view <
+        using view_t = tmvc::qt::native::text_view <
             text_model_t,
+            selection_model_t,
             controller_t
         >;
-        auto text_view = new view_t{text_, plain_selection_, plain_controller_};
+
+        auto text_view = new view_t{text_, selection_, controller_};
         text_view->setFont(fnt);
-        text_view->setWordWrapMode(QTextOption::NoWrap);
         vlayout->addWidget(text_view);
     }
 

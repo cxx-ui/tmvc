@@ -31,7 +31,7 @@ private:
     using controller_t = tmvc::single_edit_controller<text_model_t>;
 
     text_model_t text_;
-    selection_model_t plain_selection_{text_};
-    tmvc::modification_history<wchar_t> plain_history_;
-    controller_t plain_controller_{text_, plain_selection_, plain_history_};
+    selection_model_t selection_{text_};
+    tmvc::modification_history<wchar_t> history_;
+    controller_t controller_{text_, selection_, history_};
 };

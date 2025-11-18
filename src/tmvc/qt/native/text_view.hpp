@@ -4,24 +4,25 @@
 // See accompanying file LICENSE for license information.
 //
 
-/// \file plain_text_view.hpp
-/// Contains definition of the basic_plain_text_view template and related type aliases.
+/// \file text_view.hpp
+/// Contains definition of the text_view type.
 
 #pragma once
 
 #include "text_view_impl.hpp"
+#include <QTextEdit>
 
 
 namespace tmvc::qt::native {
 
 
-/// Native Qt Plain text view based on QPlainTextEdit widget
+/// Native Qt Rich text view based on QTextEdit widget
 template <
     text_model Model,
     qt_selection_model<Model> SelectionModel,
     qt_selection_controller_for<Model> Controller
 >
-using plain_text_view = text_view_impl<QTextEdit, Model, SelectionModel, Controller>;
+using text_view = text_view_impl<QTextEdit, Model, SelectionModel, Controller>;
 
 
 }
