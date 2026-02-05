@@ -3,7 +3,9 @@
 # Application test
 add_executable(texttest
                editor_controller_test.cpp
+               formatted_editor_controller_test.cpp
                line_numbers_text_model_test.cpp
+               simple_formatted_text_model_test.cpp
                simple_text_model_test.cpp
                single_selection_model_test.cpp
                test.cpp

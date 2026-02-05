@@ -27,6 +27,8 @@ private:
     using text_model_t = tmvc::wsimple_text_model;
     using document_model_t = tmvc::text_document_model<text_model_t>;
 
+    static_assert(tmvc::edit_controller<tmvc::single_edit_controller<text_model_t>>);
+
     text_model_t text_;
     document_model_t doc_{text_};
 };

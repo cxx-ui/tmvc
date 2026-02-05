@@ -11,6 +11,7 @@
 
 #include "modification.hpp"
 #include "selection_model.hpp"
+#include "std_character.hpp"
 #include "std_selection_controller.hpp"
 #include "text_model.hpp"
 #include "impl/utils.hpp"
@@ -29,6 +30,7 @@ class std_edit_controller: public std_selection_controller<Derived, TextModel> {
 public:
     /// Type of character
     using char_t = typename TextModel::char_t;
+    using value_t = impl::char_value_t<char_t>;
 
     /// Type of text model
     using text_model_t = TextModel;
@@ -36,8 +38,8 @@ public:
     /// Type of modification history
     using modification_history_t = modification_history<char_t>;
 
-    /// Type of string
-    using string_t = std::basic_string<char_t>;
+    /// Type of vector of characters
+    using chars_t = std::vector<char_t>;
 
     /// Constructs edit controller with specified references to text and selection models
     /// and modification history
@@ -78,7 +80,10 @@ public:
     // Text editing
 
     /// Replaces text of entire document
-    void set_text(const string_t & t);
+    void set_text(characters_range<char_t> auto && chars);
+
+    /// Replaces text of entire document
+    void set_text(const char_t * str) requires std_character<char_t>;
 
     /// Clears all document content
     void clear();
@@ -113,10 +118,11 @@ public:
     bool can_cut() const;
 
     /// Cuts currently selected text. Returns text what should be placed in clipboard
-    std::basic_string<char_t> cut();
+    std::vector<char_t> cut();
 
-    /// Pastes text replacing current selection.
-    void paste(const std::basic_string<char_t> & text);
+    /// Pastes characters replacing current selection.
+    template <std::ranges::range CharsRange>
+    void paste(CharsRange && chars);
 
     /// Returns true if delete action can be performed now
     bool can_delete() const;
@@ -175,11 +181,13 @@ protected:
     /// If current position in document is before the insert position
     /// then it does not change.
     /// Returns range of inserted characters.
-    range insert_chars(const position & p, const string_t & chars);
+    template <std::ranges::range CharsRange>
+    range insert_chars(const position & p, CharsRange && chars);
 
     /// Inserts characters at current position and moves current position
     /// to end of inserted range
-    void insert_chars(const string_t & chars);
+    template <std::ranges::range CharsRange>
+    void insert_chars(CharsRange && chars);
 
     /// Deletes characters from specified range. If current document position
     /// is within specified range then it changes to the start of the range.
@@ -255,7 +263,7 @@ private:
 
     /// Searches for indent characters located at the beginning of first non empty
     /// line looking back starting from specified line number
-    std::tuple<string_t, size_t> find_indent_chars(size_t lnum) const;
+    std::tuple<chars_t, size_t> find_indent_chars(size_t lnum) const;
 
     /// Removes spaces from current line if line contains only spaces
     void remove_all_spaces_current_line();

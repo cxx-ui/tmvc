@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "characters_range.hpp"
 #include "edit_controller.hpp"
 #include "range.hpp"
 #include "selection_controller.hpp"
@@ -50,18 +51,19 @@ private:
 template <typename Char>
 class insert_modification: public range_modification<Char> {
 public:
-    /// Type of string
-    using string_t = std::basic_string<Char>;
-
-    /// Constructs insert modification with specified range and characters
-    insert_modification(const range & r, string_t chars):
-        range_modification<Char>{r}, chars_{std::move(chars)} {}
+    /// Constructs insert modification with specified insert range
+    /// and range of characters
+    insert_modification(const range & r, characters_range<Char> auto && chars):
+    range_modification<Char>{r} {
+        auto c_chars = chars | std::ranges::views::common;
+        chars_.assign(c_chars.begin(), c_chars.end());
+    }
 
     /// Returns inserted characters
     auto & chars() const { return chars_; }
 
 private:
-    string_t chars_;            ///< Inserted characters
+    std::vector<Char> chars_;           ///< Inserted characters
 };
 
 
@@ -69,18 +71,19 @@ private:
 template <typename Char>
 class erase_modification: public range_modification<Char> {
 public:
-    /// Type of string
-    using string_t = std::basic_string<Char>;
-
-    /// Constructs delete action with specified range and characters
-    erase_modification(const range & r, string_t chars):
-        range_modification<Char>{r}, chars_{std::move(chars)} {}
+    /// Constructs delete action with specified delete range
+    /// and range of characters
+    erase_modification(const range & r, characters_range<Char> auto && chars):
+    range_modification<Char>{r} {
+        auto c_chars = chars | std::ranges::views::common;
+        chars_.assign(c_chars.begin(), c_chars.end());
+    }
 
     /// Returns erased characters
     auto & chars() const { return chars_; }
 
 private:
-    string_t chars_;            ///< Erased characters
+    std::vector<Char> chars_;           ///< Erased characters
 };
 
 
@@ -88,13 +91,18 @@ private:
 template <typename Char>
 class replace_modification: public range_modification<Char> {
 public:
-    /// Type of string
-    using string_t = std::basic_string<Char>;
-
     /// Constructs replace modification with specified range of replacement,
-    /// old and new characters
-    replace_modification(const range & r, string_t old_ch, string_t new_ch):
-        range_modification<Char>{r}, old_chars_{old_ch}, new_chars_{new_ch} {}
+    /// and old and new ranges of characters
+    replace_modification(const range & r,
+                         characters_range<Char> auto && old_chars,
+                         characters_range<Char> auto && new_chars):
+    range_modification<Char>{r} {
+        auto old_c_chars = old_chars | std::ranges::views::common;
+        old_chars_.assign(old_c_chars.begin(), old_c_chars.end());
+
+        auto new_c_chars = new_chars | std::ranges::views::common;
+        new_chars_.assign(new_c_chars.begin(), new_c_chars.end());
+    }
 
     /// Returns reference to characters before replacement
     auto & old_chars() const { return old_chars_; }
@@ -103,8 +111,8 @@ public:
     auto & new_chars() const { return new_chars_; }
 
 private:
-    string_t old_chars_;        ///< Characters before replacement
-    string_t new_chars_;        ///< Characters after replacement
+    std::vector<Char> old_chars_;       ///< Characters before replacement
+    std::vector<Char> new_chars_;       ///< Characters after replacement
 };
 
 
@@ -348,9 +356,6 @@ public:
     /// Type of character
     using char_t = typename TextModel::char_t;
 
-    /// Type of string
-    using string_t = std::basic_string<char_t>;
-
     /// Type of modification
     using modification_t = modification<char_t>;
 
@@ -383,9 +388,9 @@ public:
 
 
     /// Inserts characters into text model and adds modification into transaction.
-    /// Returns range of inserted text
-    range insert_characters(const position & pos, const string_t & chars) {
-        if (chars.empty()) {
+    /// Returns range of inserted characters.
+    range insert_characters(const position & pos, characters_range<char_t> auto && chars) {
+        if (std::ranges::empty(chars)) {
             return {pos, pos};
         }
 
@@ -401,7 +406,7 @@ public:
             return;
         }
 
-        string_t chars = characters_str(text_, r);
+        auto chars = characters_vector(text_, r);
         text_.erase(r);
         add(std::make_unique<erase_modification<char_t>>(r, chars));
     }

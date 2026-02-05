@@ -62,7 +62,9 @@ concept selection_controller = requires(Controller & cntrl, const position & p) 
     { cntrl.can_copy() } -> std::same_as<bool>;
 
     // Copies selected text
-    { cntrl.copy() } -> std::same_as<std::basic_string<typename Controller::char_t>>;
+    { cntrl.copy() } -> std::ranges::range;
+    requires std::convertible_to<std::ranges::range_value_t<decltype(cntrl.copy())>,
+                                 typename Controller::char_t>;
 
     // Selects all text
     cntrl.select_all();

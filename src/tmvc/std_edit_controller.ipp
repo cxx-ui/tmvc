@@ -11,19 +11,84 @@
 namespace tmvc {
 
 
-// Helper for defining space/tab search string depending on character type
-template <typename char_t>
-struct tab_space_search_str {
-    static inline constexpr const char_t * value = "\t ";
-};
+template <text_model_character Char>
+constexpr auto char_code(const Char & c) {
+    if constexpr (std_character<Char>) {
+        return c;
+    } else {
+        return c.character();
+    }
+}
 
-template <>
-struct tab_space_search_str<wchar_t> {
-    static inline constexpr const wchar_t * value = L"\t ";
-};
+template <typename Char>
+constexpr bool is_space_or_tab(const Char & c) {
+    return c == ' ' || c == '\t';
+}
 
-template <typename char_t>
-inline auto tab_space_search_str_v = tab_space_search_str<char_t>::value;
+template <typename Char>
+constexpr bool is_space(const Char & c) {
+    return c == ' ';
+}
+
+template <typename Char>
+constexpr bool is_tab(const Char & c) {
+    return c == '\t';
+}
+
+template <std::ranges::random_access_range Range>
+size_t find_first_not_space_tab(const Range & r, size_t start = 0) {
+    auto sz = static_cast<size_t>(std::ranges::size(r));
+    for (size_t i = start; i < sz; ++i) {
+        if (!is_space_or_tab(r[i])) {
+            return i;
+        }
+    }
+    return SIZE_MAX;
+}
+
+template <std::ranges::random_access_range Range>
+size_t find_last_not_space_tab(const Range & r, size_t end) {
+    auto sz = static_cast<size_t>(std::ranges::size(r));
+    if (end == 0) {
+        return SIZE_MAX;
+    }
+    size_t i = end < sz ? end : sz;
+    while (i > 0) {
+        --i;
+        if (!is_space_or_tab(r[i])) {
+            return i;
+        }
+    }
+    return SIZE_MAX;
+}
+
+template <std::ranges::random_access_range Range, typename Char>
+bool starts_with_chars(const Range & r, const std::vector<Char> & prefix) {
+    auto sz = static_cast<size_t>(std::ranges::size(r));
+    if (prefix.size() > sz) {
+        return false;
+    }
+    for (size_t i = 0; i < prefix.size(); ++i) {
+        if (char_code(r[i]) != char_code(prefix[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template <std::ranges::random_access_range Range>
+bool ends_with_spaces(const Range & r, size_t count) {
+    auto sz = static_cast<size_t>(std::ranges::size(r));
+    if (sz < count) {
+        return false;
+    }
+    for (size_t i = sz - count; i < sz; ++i) {
+        if (!is_space(r[i])) {
+            return false;
+        }
+    }
+    return true;
+}
 
 
 
@@ -37,7 +102,8 @@ history_{hist} {
 
 
 template <typename Derived, editable_text_model TextModel>
-range std_edit_controller<Derived, TextModel>::insert_chars(const position & p, const string_t & chars) {
+template <std::ranges::range CharsRange>
+range std_edit_controller<Derived, TextModel>::insert_chars(const position & p, CharsRange && chars) {
     if (chars.empty()) {
         return {p, p};
     }
@@ -53,7 +119,8 @@ range std_edit_controller<Derived, TextModel>::insert_chars(const position & p, 
 
 
 template <typename Derived, editable_text_model TextModel>
-void std_edit_controller<Derived, TextModel>::insert_chars(const string_t & chars) {
+template <std::ranges::range CharsRange>
+void std_edit_controller<Derived, TextModel>::insert_chars(CharsRange && chars) {
     // removing current selection if not empty
     delete_chars(selected_range());
 
@@ -69,7 +136,7 @@ void std_edit_controller<Derived, TextModel>::delete_chars(const range & r) {
     }
 
     // saving deleted chars for undo action
-    auto chars = characters_str(text_mdl_, r);
+    auto chars = characters_vector(text_mdl_, r);
 
     text_mdl_.erase(r);
 
@@ -140,18 +207,25 @@ void std_edit_controller<Derived, TextModel>::perform_redo(const modification<ch
 
 
 template <typename Derived, editable_text_model TextModel>
-void std_edit_controller<Derived, TextModel>::set_text(const string_t & t) {
+void std_edit_controller<Derived, TextModel>::set_text(characters_range<char_t> auto && chars) {
     // removing existing content
     clear();
 
     // inserting new content
-    insert_chars(derived_pos(), t);
+    insert_chars(derived_pos(), chars);
 
     // moving position to beginning of document
     derived_set_pos_move_anchor({0, 0});
 
     // clearing modification history
     history_.clear();
+}
+
+
+template <typename Derived, editable_text_model TextModel>
+void std_edit_controller<Derived, TextModel>::set_text(const char_t * str)
+requires std_character<char_t> {
+    return set_text(std::basic_string_view{str});
 }
 
 
@@ -198,8 +272,8 @@ void std_edit_controller<Derived, TextModel>::do_enter(bool ctrl, bool shift) {
     // removing all characters from current line if it contains only spaces
     remove_all_spaces_current_line();
 
-    string_t chars;
-    chars.push_back(static_cast<char_t>('\n'));
+    chars_t chars;
+    chars.push_back(impl::make_char<char_t>('\n'));
 
     // adding auto indent characters
     {
@@ -210,47 +284,51 @@ void std_edit_controller<Derived, TextModel>::do_enter(bool ctrl, bool shift) {
         // (not taking into account space characters) when start searching
         // from previous line
 
-        auto sel_line_start = line_str(text_mdl_, start_search_line).substr(0, sel_begin.column);
-        if (sel_line_start.find_first_not_of(tab_space_search_str_v<char_t>) == string_t::npos) {
+        auto sel_line = line_characters(text_mdl_, start_search_line);
+        bool only_spaces = true;
+        for (size_t i = 0; i < sel_begin.column && i < sel_line.size(); ++i) {
+            if (!is_space_or_tab(sel_line[i])) {
+                only_spaces = false;
+                break;
+            }
+        }
+        if (only_spaces) {
             if (start_search_line != 0) {
                 --start_search_line;
             }
         }
 
-        auto search_res = find_indent_chars(start_search_line);
-        chars.append(std::get<0>(search_res));
-
-        auto lnum = std::get<1>(search_res);
+        auto [indent_chars, lnum] = find_indent_chars(start_search_line);
+        chars.insert(chars.end(), indent_chars.begin(), indent_chars.end());
 
         bool add_tab = false;
 
         if (lnum == sel_begin.line) {
             // adding one tab only if last character before current pos is {
-            auto l_str = line_str(text_mdl_, lnum);
-            auto lbegin = l_str.substr(0, sel_begin.column);
-            auto last_char_pos = lbegin.find_last_not_of(tab_space_search_str_v<char_t>);
-            if (last_char_pos != string_t::npos) {
-                if (l_str.at(last_char_pos) == static_cast<char_t>('{')) {
+            auto l_str = line_characters(text_mdl_, lnum);
+            auto last_char_pos = find_last_not_space_tab(l_str, sel_begin.column);
+            if (last_char_pos != SIZE_MAX) {
+                if (l_str[last_char_pos] == static_cast<value_t>('{')) {
                     add_tab = true;
                 }
             }
         } else if (lnum != SIZE_MAX) {
             // adding one tab if line ends with {
-            auto l_str = line_str(text_mdl_, lnum);
-            auto last_char_pos = l_str.find_last_not_of(tab_space_search_str_v<char_t>);
-            assert(last_char_pos != string_t::npos && "invalid position of last char");
+            auto l_str = line_characters(text_mdl_, lnum);
+            auto last_char_pos = find_last_not_space_tab(l_str, l_str.size());
+            assert(last_char_pos != SIZE_MAX && "invalid position of last char");
 
-            if (l_str.at(last_char_pos) == static_cast<char_t>('{')) {
+            if (l_str[last_char_pos] == static_cast<value_t>('{')) {
                 add_tab = true;
             }
         }
 
         if (add_tab) {
             if (expand_tabs()) {
-                string_t spaces(tab_size(), static_cast<char_t>(' '));
-                chars.append(spaces);
+                chars_t spaces(tab_size(), impl::make_char<char_t>(' '));
+                chars.insert(chars.end(), spaces.begin(), spaces.end());
             } else {
-                chars.push_back(static_cast<char_t>('\t'));
+                chars.push_back(impl::make_char<char_t>('\t'));
             }
         }
     }
@@ -269,10 +347,10 @@ void std_edit_controller<Derived, TextModel>::do_tab(bool ctrl, bool shift) {
         // multiple lines selected -> need add/remove indent
         add_or_remove_indent = true;
     } else {
-        const auto & cline = line_str(text_mdl_, derived_pos().line);
-        if (!cline.empty() &&
+        auto line_sz = text_mdl_.line_size(derived_pos().line);
+        if (line_sz != 0 &&
             selected_range().start.column == 0 &&
-            selected_range().end.column == cline.size()) {
+            selected_range().end.column == line_sz) {
 
             // full line selected -> need add/remove indent
             add_or_remove_indent = true;
@@ -285,11 +363,11 @@ void std_edit_controller<Derived, TextModel>::do_tab(bool ctrl, bool shift) {
         auto orig_anchor_pos = derived_anchor_pos();
 
         if (!shift) {
-            string_t chars;
+            chars_t chars;
             if (expand_tabs()) {
-                chars = string_t(tab_size(), static_cast<char_t>(' '));
+                chars = chars_t(tab_size(), impl::make_char<char_t>(' '));
             } else {
-                chars = static_cast<char_t>('\t');
+                chars = chars_t{impl::make_char<char_t>('\t')};
             }
 
             // adding indent at beginning of all selected lines
@@ -325,15 +403,16 @@ void std_edit_controller<Derived, TextModel>::do_tab(bool ctrl, bool shift) {
             for (auto i = first_line; i <= last_line; ++i) {
                 size_t n_chars_removed = 0;     // number of characters removed from current line
 
-                const auto & cline = line_str(text_mdl_, i);
-                if (cline.size() > 0 && cline[0] == static_cast<char_t>('\t')) {
+                auto cline = line_characters(text_mdl_, i);
+                if (!std::ranges::empty(cline) &&
+                    is_tab(*std::ranges::begin(cline))) {
                     // if first character is tab then remove it
                     trans.erase_characters({{i, 0}, {i, 1}});
                     n_chars_removed = 1;
                 } else {
                     // removing up to tab_size_ spaces
                     for (auto c : cline) {
-                        if (c != static_cast<char_t>(' ')) {
+                        if (!is_space(c)) {
                             break;
                         }
 
@@ -388,11 +467,11 @@ void std_edit_controller<Derived, TextModel>::do_tab(bool ctrl, bool shift) {
             trans.erase_characters(selected_range());
         } else {
             auto pos = selected_range().start;
-            const auto & cline = line_str(text_mdl_, pos.line);
+            const auto cline = line_characters(text_mdl_, pos.line);
 
             if (pos.column != 0) {
                 // if previous character is tab then just removing it
-                if (cline[pos.column - 1] == '\t') {
+                if (is_tab(cline[pos.column - 1])) {
                     trans.erase_characters({{pos.line, pos.column - 1}, {pos.line, pos.column}});
                 } else {
                     // calculating number of spaces to remove
@@ -409,7 +488,7 @@ void std_edit_controller<Derived, TextModel>::do_tab(bool ctrl, bool shift) {
 
                     auto col = pos.column;
                     while (col > min_col) {
-                        if (cline[col - 1] != static_cast<char_t>(' ')) {
+                        if (!is_space(cline[col - 1])) {
                             break;
                         }
 
@@ -431,10 +510,11 @@ void std_edit_controller<Derived, TextModel>::do_tab(bool ctrl, bool shift) {
             size_t num_spaces = tab_size() - (insert_pos.column % tab_size());
     
             // inserting spaces
-            trans.insert_characters(derived_pos(), string_t(num_spaces, static_cast<char_t>(' ')));
+            trans.insert_characters(derived_pos(),
+                                    chars_t(num_spaces, impl::make_char<char_t>(' ')));
         } else {
             // inserting single tab character
-            trans.insert_characters(derived_pos(), string_t{static_cast<char_t>('\t')});
+            trans.insert_characters(derived_pos(), chars_t{impl::make_char<char_t>('\t')});
         }
     }
 }
@@ -454,14 +534,14 @@ void std_edit_controller<Derived, TextModel>::do_insert(bool ctrl, bool shift) {
 template <typename Derived, editable_text_model TextModel>
 void std_edit_controller<Derived, TextModel>::do_char(char_t c) {
 
-    const auto & cline = line_str(text_mdl_, derived_pos().line);
+    const auto cline = line_characters(text_mdl_, derived_pos().line);
 
     // handling overwrite mode
     if (is_overwrite_mode() &&
         selected_range().empty() &&
         derived_pos().column != cline.size()) {
 
-        text_mdl_.replace(derived_pos(), string_t{c});
+        text_mdl_.replace(derived_pos(), chars_t{c});
         auto new_pos = derived_pos();
         ++new_pos.column;
         derived_set_pos_move_anchor(new_pos);
@@ -469,26 +549,26 @@ void std_edit_controller<Derived, TextModel>::do_char(char_t c) {
     }
 
     // removing indent at } insertion
-    if (c == static_cast<char_t>('}') &&
+    if (c == static_cast<impl::char_value_t<char_t>>('}') &&
         selected_range().empty() &&
         derived_pos().line != 0 &&
         derived_pos().column == cline.size() &&
         !cline.empty() &&
-        cline.find_first_not_of(tab_space_search_str_v<char_t>) == string_t::npos) {
+        find_first_not_space_tab(cline, 0) == SIZE_MAX) {
 
         auto res = find_indent_chars(derived_pos().line - 1);
         const auto & res_chars = std::get<0>(res);
-        if (cline.substr(0, res_chars.size()) == res_chars) {
-            if (cline.back() == static_cast<char_t>('\t')) {
+        if (starts_with_chars(cline, res_chars)) {
+            if (is_tab(cline[std::ranges::size(cline) - 1])) {
                 delete_chars({{derived_pos().line, derived_pos().column - 1}, derived_pos()});
             } else if (cline.size() >= tab_size() &&
-                       cline.substr(cline.size() - 4, 4) == string_t(tab_size(), static_cast<char_t>(' '))) {
+                       ends_with_spaces(cline, tab_size())) {
                 delete_chars({{derived_pos().line, derived_pos().column - tab_size()}, derived_pos()});
             }
         }
     }
 
-    insert_chars(string_t{c});
+    insert_chars(chars_t{c});
 }
 
 
@@ -499,7 +579,7 @@ bool std_edit_controller<Derived, TextModel>::can_cut() const {
 
 
 template <typename Derived, editable_text_model TextModel>
-auto std_edit_controller<Derived, TextModel>::cut() -> std::basic_string<char_t> {
+auto std_edit_controller<Derived, TextModel>::cut() -> std::vector<char_t> {
     auto res = this->copy();
     do_delete(false, false);
     return res;
@@ -507,8 +587,9 @@ auto std_edit_controller<Derived, TextModel>::cut() -> std::basic_string<char_t>
 
 
 template <typename Derived, editable_text_model TextModel>
-void std_edit_controller<Derived, TextModel>::paste(const std::basic_string<char_t> & text) {
-    insert_chars(text);
+template <std::ranges::range CharsRange>
+void std_edit_controller<Derived, TextModel>::paste(CharsRange && chars) {
+    insert_chars(chars);
 }
 
 
@@ -575,15 +656,18 @@ void std_edit_controller<Derived, TextModel>::do_before_save() {
 
 template <typename Derived, editable_text_model TextModel>
 auto std_edit_controller<Derived, TextModel>::find_indent_chars(size_t lnum) const ->
-std::tuple<std::basic_string<char_t>, size_t> {
+std::tuple<chars_t, size_t> {
     // searching for first line before current position that has
     // non space characters
     while (true) {
-        const auto & l_str = line_str(text_mdl_, lnum);
-        auto pos = l_str.find_first_not_of(tab_space_search_str_v<char_t>);
-        if (pos != string_t::npos) {
+        const auto l_str = line_characters(text_mdl_, lnum);
+        auto pos = find_first_not_space_tab(l_str, 0);
+        if (pos != SIZE_MAX) {
             // found line with non space characters
-            return std::make_tuple(l_str.substr(0, pos), lnum);
+            return std::make_tuple(
+                chars_t{l_str.begin(), l_str.begin() + static_cast<long>(pos)},
+                lnum
+            );
         }
 
         if (lnum == 0) {
@@ -593,13 +677,13 @@ std::tuple<std::basic_string<char_t>, size_t> {
         --lnum;
     }
 
-    return std::make_tuple(string_t{}, SIZE_MAX);
+    return std::make_tuple(chars_t{}, SIZE_MAX);
 }
 
 
 template <typename Derived, editable_text_model TextModel>
 void std_edit_controller<Derived, TextModel>::remove_all_spaces_current_line() {
-    const auto & cline = line_str(text_mdl_, derived_pos().line);
+    const auto cline = line_characters(text_mdl_, derived_pos().line);
     
     // checking that line is not empty
     if (cline.empty()) {
@@ -608,13 +692,14 @@ void std_edit_controller<Derived, TextModel>::remove_all_spaces_current_line() {
 
     // checking that line contains only spaces
     for (auto c : cline) {
-        if (c != static_cast<char_t>(' ') && c != static_cast<char_t>('\t')) {
+        if (!is_space_or_tab(c)) {
             return;
         }
     }
     
     // removing all characters from line
-    delete_chars({{derived_pos().line, 0}, {derived_pos().line, cline.size()}});
+    auto line_sz = text_mdl_.line_size(derived_pos().line);
+    delete_chars({{derived_pos().line, 0}, {derived_pos().line, line_sz}});
 }
 
 

@@ -51,7 +51,7 @@ public:
     static void do_page_down(bool, bool) {}
 
     static bool can_copy() { return false; }
-    static std::basic_string<char_t> copy() { assert(false && "should never be called"); return {}; }
+    static std::vector<char_t> copy() { assert(false && "should never be called"); return {}; }
     static void select_all() {}
 
     static basic_context_menu<char_t> create_context_menu() { return {}; }

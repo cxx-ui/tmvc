@@ -47,10 +47,12 @@ concept edit_controller = selection_controller<Controller> && requires(Controlle
     { cntrl.can_cut() } -> std::same_as<bool>;
 
     // Cuts selected text
-    { cntrl.cut() } -> std::same_as<std::basic_string<typename Controller::char_t>>;
+    { cntrl.cut() } -> std::ranges::range;
+    requires std::convertible_to<std::ranges::range_value_t<decltype(cntrl.cut())>,
+                                 typename Controller::char_t>;
 
     // Pastes text in current selection
-    cntrl.paste(std::declval<std::basic_string<typename Controller::char_t>>());
+    cntrl.paste(std::declval<std::vector<typename Controller::char_t>>());
 
     /// Returns true if delete action can be performed now
     { cntrl.can_delete() } -> std::same_as<bool>;

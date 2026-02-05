@@ -363,9 +363,12 @@ public:
         return !impl::selected_range(derived_anchor_pos(), derived_pos()).empty();
     }
 
-    /// Performs copy action. Returns text that should be placed in clipboard
-    std::basic_string<char_t> copy() const {
-        return characters_str(text_mdl_, impl::selected_range(derived_anchor_pos(), derived_pos()));
+    /// Performs copy action. Returns vector of characters that should be placed in clipboard
+    std::vector<char_t> copy() const {
+        auto chars = characters(text_mdl_,
+                                impl::selected_range(derived_anchor_pos(), derived_pos()));
+        auto chars_common = chars | std::ranges::views::common;
+        return std::vector<char_t>{chars_common.begin(), chars_common.end()};
     }
 
 

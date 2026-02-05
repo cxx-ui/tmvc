@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(insert_chars_curr_pos) {
         BOOST_CHECK(false);
     });
 
-    controller.paste(L"first\nsecond\nthird");
+    controller.paste(std::wstring{L"first\nsecond\nthird"});
 
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
     BOOST_CHECK_EQUAL(selection.pos().column, 5);
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(insert_chars_selection) {
         BOOST_CHECK(string(text) == L"the old teond line");
     });
 
-    controller.paste(L"first\nsecond\nthird");
+    controller.paste(std::wstring{L"first\nsecond\nthird"});
 
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
     BOOST_CHECK_EQUAL(selection.pos().column, 5);
@@ -862,7 +862,7 @@ BOOST_AUTO_TEST_CASE(do_insert_undo_redo) {
 
 
     controller.select_text({1, 2}, {1, 2});
-    controller.paste(L"aa");
+    controller.paste(std::wstring{L"aa"});
 
     BOOST_CHECK(string(text) == L"first line\nseaacond\nthird line");
     BOOST_CHECK(controller.can_undo());

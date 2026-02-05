@@ -9,8 +9,10 @@
 
 #pragma once
 
-#include "signals.hpp"
+#include "characters_range.hpp"
 #include "editable_text_model.hpp"
+#include "signals.hpp"
+#include "std_character.hpp"
 #include "text_model_signals.hpp"
 #include "impl/utils.hpp"
 #include <memory>
@@ -28,14 +30,16 @@ public:
     /// Type of character
     using char_t = Char;
 
-    /// Type of string
-    using string_t = std::basic_string<char_t>;
-
     /// Constructs empty text model that contains empty text line
     explicit basic_simple_text_model();
 
-    /// Constructs text model with specified text
-    explicit basic_simple_text_model(const string_t & text);
+    /// Constructs text model with specified range of characters
+    explicit basic_simple_text_model(characters_range<Char> auto && chars);
+
+    /// Constructs text model with specified pointer to null terminated string
+    explicit basic_simple_text_model(const char_t * chars)
+    requires std_character<char_t>:
+        basic_simple_text_model{std::basic_string_view{chars}} {}
 
     /// Returns number of lines in model
     uint64_t lines_size() const {
@@ -60,22 +64,37 @@ public:
     // Text modification
 
     /// Insert characters at specified position. Returns position range for inserted characters.
-    range insert(const position & p, const string_t & chars);
+    range insert(const position & p, characters_range<Char> auto && chars);
+
+    /// Insert characters at specified position. Returns position range for inserted characters.
+    range insert(const position & p, const char_t * chars) requires std_character<Char> {
+        return insert(p, std::basic_string_view{chars});
+    }
 
     /// Deletes characters from specified position range.
     void erase(const range & r);
 
     /// Replaces characters at specified position
-    void replace(const position & p, const string_t & chars);
+    void replace(const position & p, characters_range<Char> auto && chars);
+
+    void replace(const position & p, const char_t * chars) requires std_character<Char> {
+        replace(p, std::basic_string_view{chars});
+    }
 
     /// Resets text in model without sending any signals and updating current
     /// position. Should be used only for testing.
-    void reset(const string_t & text);
+    void reset(characters_range<Char> auto && chars);
 
+    /// Resets text in model without sending any signals and updating current
+    /// position. Should be used only for testing.
+    void reset(const char_t * chars) requires std_character<Char> {
+        reset(std::basic_string_view{chars});
+    }
 
 private:
-    using string_vector = std::vector<std::shared_ptr<string_t>>;
-    string_vector lines_;           ///< Vector of lines of text
+    using line_t = std::vector<Char>;
+    using lines_vector = std::vector<std::shared_ptr<line_t>>;
+    lines_vector lines_;           ///< Vector of lines of text
 };
 
 

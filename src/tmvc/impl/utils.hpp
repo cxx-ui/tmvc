@@ -11,34 +11,64 @@
 
 #include <list>
 #include <memory>
-#include <string>
+#include <utility>
+#include <vector>
 #include "../range.hpp"
+#include "../text_model.hpp"
 
 
 namespace tmvc::impl {
 
-
-/// Converts string to list of lines
+/// Returns type of underlying character code for basic or formatted characters
 template <typename Char>
-std::list<std::shared_ptr<std::basic_string<Char>>> split_string_to_lines(const std::basic_string<Char> & chars) {
-    if (chars.empty()) {
-        return {std::make_shared<std::basic_string<Char>>()};
+struct char_value_type {
+    using type = Char;
+};
+
+template <text_model_character Char>
+requires (!std_character<Char>)
+struct char_value_type<Char> {
+    using type = decltype(std::declval<Char>().character());
+};
+
+template <typename Char>
+using char_value_t = typename char_value_type<Char>::type;
+
+/// Creates a character of specified type from a character literal/code point
+template <typename Char, typename Value>
+constexpr Char make_char(Value ch) {
+    using base_t = char_value_t<Char>;
+    if constexpr (requires { Char{static_cast<base_t>(ch)}; }) {
+        return Char{static_cast<base_t>(ch)};
+    } else {
+        return static_cast<Char>(ch);
+    }
+}
+
+
+/// Converts range of characters to list of lines
+template <typename Char, typename CharsRange>
+std::list<std::shared_ptr<std::vector<Char>>>
+split_chars_to_lines(CharsRange && chars) {
+
+    if (std::ranges::empty(chars)) {
+        return {std::make_shared<std::vector<Char>>()};
     }
 
     // creating list of new lines
     size_t new_lines_count = 0;
-    std::list<std::shared_ptr<std::basic_string<Char>>> lines;
-    auto new_line = std::make_shared<std::basic_string<Char>>();
+    std::list<std::shared_ptr<std::vector<Char>>> lines;
+    auto new_line = std::make_shared<std::vector<Char>>();
 
     for (auto ch : chars) {
-        if (ch == static_cast<Char>('\r')) {
+        if (ch == static_cast<char_value_t<decltype(ch)>>('\r')) {
             // skipping \r characters
             continue;
         }
 
-        if (ch == static_cast<Char>('\n')) {
+        if (ch == static_cast<char_value_t<decltype(ch)>>('\n')) {
             lines.push_back(new_line);
-            new_line = std::make_shared<std::basic_string<Char>>();
+            new_line = std::make_shared<std::vector<Char>>();
         } else {
             new_line->push_back(ch);
         }

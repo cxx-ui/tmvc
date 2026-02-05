@@ -50,4 +50,17 @@ std::basic_string<Char> qstring_to_std_string(const QString & str) {
 }
 
 
+/// Converts characters range to QString
+template <typename CharsRange>
+QString chars_to_qstring(CharsRange && chars) {
+    if constexpr (std::same_as<std::ranges::range_value_t<CharsRange>, wchar_t>) {
+        std::wstring str{std::ranges::begin(chars), std::ranges::end(chars)};
+        return std_string_to_qstring(str);
+    } else {
+        std::string str{std::ranges::begin(chars), std::ranges::end(chars)};
+        return std_string_to_qstring(str);
+    }
+}
+
+
 }

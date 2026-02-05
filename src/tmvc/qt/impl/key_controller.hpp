@@ -28,8 +28,8 @@ bool process_selection_key_event(Controller & controller, QKeyEvent * event) {
 
     // processing standard navigation key sequences
     if (event->matches(QKeySequence::Copy)) {
-        auto str = controller.copy();
-        auto qstr = std_string_to_qstring(str);
+        auto chars = controller.copy();
+        auto qstr = chars_to_qstring(chars);
         QGuiApplication::clipboard()->setText(qstr);
         event->accept();
         return true;
@@ -94,7 +94,7 @@ bool process_edit_key_event(Controller & controller, QKeyEvent * event) {
     // processing standard editing key sequences
     if (event->matches(QKeySequence::Cut)) {
         auto str = controller.cut();
-        QGuiApplication::clipboard()->setText(std_string_to_qstring(str));
+        QGuiApplication::clipboard()->setText(chars_to_qstring(str));
         event->accept();
         return true;
     } else if (event->matches(QKeySequence::Paste)) {

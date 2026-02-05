@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(do_end_shift) {
 
 /// Tests moving to next word
 BOOST_AUTO_TEST_CASE(move_next_word) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 0}, {0, 0});
     controller.do_right(true, false);
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(move_next_word) {
 
 /// Tests moving to next word on space
 BOOST_AUTO_TEST_CASE(move_next_word_space) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 4}, {0, 4});
     controller.do_right(true, false);
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_space) {
 
 /// Tests moving to next word with non-alnum characters
 BOOST_AUTO_TEST_CASE(move_next_word_no_alnum) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 8}, {0, 8});
     controller.do_right(true, false);
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_no_alnum) {
 
 /// Tests moving to next word via non-alnum characters
 BOOST_AUTO_TEST_CASE(move_next_word_via_alnum) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 13}, {0, 13});
     controller.do_right(true, false);
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_via_alnum) {
 
 /// Tests moving to next word at EOL
 BOOST_AUTO_TEST_CASE(move_next_word_eol) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 16}, {0, 16});
     controller.do_right(true, false);
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_eol) {
 
 /// Tests moving to next word at new line
 BOOST_AUTO_TEST_CASE(move_next_word_next_line) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 18}, {0, 18});
     controller.do_right(true, false);
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_next_line) {
 
 /// Tests moving to previous word
 BOOST_AUTO_TEST_CASE(move_prev_word) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 12}, {0, 12});
     controller.do_left(true, false);
@@ -506,7 +506,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word) {
 
 /// Tests moving to previous word on space
 BOOST_AUTO_TEST_CASE(move_prev_word_space) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 8}, {0, 8});
     controller.do_left(true, false);
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_space) {
 
 /// Tests moving to previous word with non-alnum characters
 BOOST_AUTO_TEST_CASE(move_prev_word_no_alnum) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 18}, {0, 18});
     controller.do_left(true, false);
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_no_alnum) {
 
 /// Tests moving to previous word via non-alnum characters
 BOOST_AUTO_TEST_CASE(move_prev_word_via_alnum) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 16}, {0, 16});
     controller.do_left(true, false);
@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_via_alnum) {
 
 /// Tests moving to previous word at line start
 BOOST_AUTO_TEST_CASE(move_prev_word_start) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 4}, {0, 4});
     controller.do_left(true, false);
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_start) {
 
 /// Tests moving to previous word at prev line
 BOOST_AUTO_TEST_CASE(move_prev_word_prev_line) {
-    auto txt = L"line of text ((*sd\n line2";
+    std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({1, 0}, {1, 0});
     controller.do_left(true, false);

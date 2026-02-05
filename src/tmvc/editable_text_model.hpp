@@ -19,7 +19,7 @@ namespace tmvc {
 template <typename TextModel>
 concept editable_text_model = text_model<TextModel> && requires(TextModel & mdl) {
     // Inserts characters at specified position. Returns position range for inserted characters.
-    { mdl.insert(std::declval<position>(), std::declval<std::basic_string<typename TextModel::char_t>>()) }
+    { mdl.insert(std::declval<position>(), std::declval<std::vector<typename TextModel::char_t>>()) }
         -> std::convertible_to<range>;
 
     /// Deletes characters from specified range.
@@ -28,7 +28,7 @@ concept editable_text_model = text_model<TextModel> && requires(TextModel & mdl)
     /// Replaces characters at specified position. All replaced characters must
     /// be in the same line. The newline character will not add new line and
     /// will be inserted into text as is.
-    mdl.replace(std::declval<position>(), std::declval<std::basic_string<typename TextModel::char_t>>());
+    mdl.replace(std::declval<position>(), std::declval<std::vector<typename TextModel::char_t>>());
 };
 
 

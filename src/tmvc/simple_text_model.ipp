@@ -15,32 +15,33 @@ namespace tmvc {
 
 template <typename Char>
 basic_simple_text_model<Char>::basic_simple_text_model() {
-    lines_.push_back(std::make_shared<string_t>());
+    lines_.push_back(std::make_shared<line_t>());
 }
 
 
 template <typename Char>
-basic_simple_text_model<Char>::basic_simple_text_model(const string_t & text) {
-    reset(text);
+basic_simple_text_model<Char>::basic_simple_text_model(characters_range<Char> auto && chars) {
+    reset(chars);
 }
 
 
 template <typename Char>
-void basic_simple_text_model<Char>::reset(const string_t & text) {
-    auto lines = impl::split_string_to_lines(text);
+void basic_simple_text_model<Char>::reset(characters_range<Char> auto && chars) {
+    auto lines = impl::split_chars_to_lines<Char>(chars);
     lines_.clear();
     std::copy(lines.begin(), lines.end(), std::back_inserter(lines_));
 }
 
 
 template <typename Char>
-range basic_simple_text_model<Char>::insert(const position & p, const string_t & chars) {
-    if (chars.empty()) {
+range basic_simple_text_model<Char>::insert(const position & p,
+                                            characters_range<Char> auto && chars) {
+    if (std::ranges::empty(chars)) {
         return {p, p};
     }
 
     // creating list of new lines
-    auto new_lines = impl::split_string_to_lines(chars);
+    auto new_lines = impl::split_chars_to_lines<Char>(chars);
     assert(!new_lines.empty() && "list of lines is empty");
 
     // calculating end position of inserted characters
@@ -56,9 +57,11 @@ range basic_simple_text_model<Char>::insert(const position & p, const string_t &
     lines_.reserve(lines_.size() + new_lines.size() - 1);
 
     // saving end of first line and replacing it with added first line
-    string_t old_first_line_end = lines_[p.line]->substr(p.column);
-    lines_[p.line]->erase(p.column);
-    lines_[p.line]->append(*new_lines.front());
+    line_t old_first_line_end{lines_[p.line]->begin() + p.column, lines_[p.line]->end()};
+    lines_[p.line]->erase(lines_[p.line]->begin() + p.column, lines_[p.line]->end());
+    lines_[p.line]->insert(lines_[p.line]->end(),
+                           new_lines.front()->begin(),
+                           new_lines.front()->end());
 
     // adding other lines
     lines_.insert(lines_.begin() + p.line + 1,
@@ -67,7 +70,9 @@ range basic_simple_text_model<Char>::insert(const position & p, const string_t &
 
 
     // merging last inserted line with saved end of old first line
-    lines_[end_line_num]->append(old_first_line_end);
+    lines_[end_line_num]->insert(lines_[end_line_num]->end(),
+                                 old_first_line_end.begin(),
+                                 old_first_line_end.end());
 
     // sending after inserted signals
     this->after_inserted(ins_range);
@@ -92,13 +97,17 @@ void basic_simple_text_model<Char>::erase(const range & r) {
 
     if (r.start.line == r.end.line) {
         // all range is in single line
-        lines_[r.start.line]->erase(r.start.column, r.end.column - r.start.column);
+        auto first = lines_[r.start.line]->begin() + r.start.column;
+        auto last = lines_[r.start.line]->begin() + r.end.column;
+        lines_[r.start.line]->erase(first, last);
     } else {
 
-        // removing content from first line of range and cocatenating
+        // removing content from first line of range and concatenating
         // rest of content from last line of range
-        lines_[r.start.line]->erase(r.start.column);
-        lines_[r.start.line]->append(lines_[r.end.line]->begin() + r.end.column,
+        auto first = lines_[r.start.line]->begin() + r.start.column;
+        lines_[r.start.line]->erase(first, lines_[r.start.line]->end());
+        lines_[r.start.line]->insert(lines_[r.start.line]->end(),
+                                     lines_[r.end.line]->begin() + r.end.column,
                                      lines_[r.end.line]->end());
 
         // removing lines after the first line
@@ -112,17 +121,26 @@ void basic_simple_text_model<Char>::erase(const range & r) {
 
 
 template <typename Char>
-void basic_simple_text_model<Char>::replace(const position & p, const string_t & chars) {
+void basic_simple_text_model<Char>::replace(const position & p,
+                                            characters_range<Char> auto && chars) {
     assert(p.line < lines_size() && "invalid line index for replace");
 
     auto sz = line_size(p.line);
+    auto chars_sz = std::ranges::size(chars);
 
-    assert(chars.size() <= sz && "invalid size of replaced characters");
-    assert(sz - chars.size() >= p.column && "invalid size of replaced characters");
+    assert(chars_sz <= sz && "invalid size of replaced characters");
+    assert(sz - chars_sz >= p.column && "invalid size of replaced characters");
 
-    range replace_range{p, {p.line, p.column + chars.size()}};
+    range replace_range{p, {p.line, p.column + chars_sz}};
     this->before_replaced(replace_range);
-    lines_[p.line]->replace(p.column, chars.size(), chars);
+
+    auto first = lines_[p.line]->begin() + p.column;
+    auto last = lines_[p.line]->begin() + p.column + chars_sz;
+    lines_[p.line]->erase(first, last);
+    lines_[p.line]->insert(lines_[p.line]->begin() + p.column,
+                           std::ranges::begin(chars),
+                           std::ranges::end(chars));
+
     this->after_replaced(replace_range);
 }
 

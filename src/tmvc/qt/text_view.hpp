@@ -551,7 +551,7 @@ private:
     /// Copies selected text to clipboard
     void do_copy() const {
         auto clip = QGuiApplication::clipboard();
-        clip->setText(impl::std_string_to_qstring(controller_.copy()));
+        clip->setText(impl::chars_to_qstring(controller_.copy()));
     }
 
 
