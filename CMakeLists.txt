@@ -6,6 +6,7 @@ option(TMVC_BUILD_DOC "Build documentation" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 
+include(CTest)
 
 # Use boost provided config files
 cmake_policy(SET CMP0167 NEW)

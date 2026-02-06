@@ -13,6 +13,8 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <optional>
+#include <string_view>
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -22,10 +24,94 @@
 #include <QMessageBox>
 #include <QVBoxLayout>
 
+namespace {
+
+using fchar_t = tmvc::wformatted_char;
+using ftext_t = tmvc::basic_simple_text_model<fchar_t>;
+
+std::vector<fchar_t> make_formatted(std::wstring_view str,
+                                    const tmvc::text_format & fmt = {}) {
+    std::vector<fchar_t> out;
+    out.reserve(str.size());
+    for (auto ch : str) {
+        out.emplace_back(ch, fmt);
+    }
+    return out;
+}
+
+void assign_formatted(ftext_t & mdl, std::wstring_view str) {
+    tmvc::clear(mdl);
+    mdl.insert({0, 0}, make_formatted(str));
+}
+
+void assign_formatted(ftext_t & mdl, const std::vector<fchar_t> & chars) {
+    tmvc::clear(mdl);
+    mdl.insert({0, 0}, chars);
+}
+
+std::vector<fchar_t> make_demo_formatted() {
+    const std::wstring_view text =
+        L"This is\nsimple\ntext\nbla\nbla\nbla\n\nlast line with very long width";
+
+    tmvc::text_format title_fmt{tmvc::color{40, 80, 160},
+                                std::nullopt,
+                                true,
+                                false,
+                                false,
+                                false};
+    tmvc::text_format simple_fmt{tmvc::color{160, 80, 40},
+                                 std::nullopt,
+                                 false,
+                                 true,
+                                 false,
+                                 false};
+    tmvc::text_format text_fmt{tmvc::color{20, 140, 60},
+                               std::nullopt,
+                               false,
+                               false,
+                               true,
+                               false};
+    tmvc::text_format bla_fmt{tmvc::color{120, 0, 140},
+                              std::nullopt,
+                              false,
+                              false,
+                              false,
+                              true};
+
+    std::vector<fchar_t> out;
+    out.reserve(text.size());
+
+    size_t i = 0;
+    for (auto ch : text) {
+        const tmvc::text_format * fmt = nullptr;
+        if (i < 7) { // "This is"
+            fmt = &title_fmt;
+        } else if (i >= 8 && i < 14) { // "simple"
+            fmt = &simple_fmt;
+        } else if (i >= 15 && i < 19) { // "text"
+            fmt = &text_fmt;
+        } else if (i >= 20 && i < 31) { // "bla\nbla\nbla"
+            if (ch != L'\n') {
+                fmt = &bla_fmt;
+            }
+        }
+
+        if (fmt) {
+            out.emplace_back(ch, *fmt);
+        } else {
+            out.emplace_back(ch);
+        }
+        ++i;
+    }
+
+    return out;
+}
+
+} // namespace
+
 
 main_window::main_window() {
-    auto initial_text = L"This is\nsimple\ntext\nbla\nbla\nbla\n\nlast line with very long width";
-    assign(text_, initial_text);
+    assign_formatted(text_, make_demo_formatted());
 
     auto central_widget = new QWidget{};
     setCentralWidget(central_widget);
@@ -134,7 +220,7 @@ void main_window::open_file() {
             wstr.push_back(ch);
         }
 
-        tmvc::assign(text_, wstr);
+        assign_formatted(text_, wstr);
     }
     catch (std::exception & err) {
         QMessageBox msg(QMessageBox::Critical,

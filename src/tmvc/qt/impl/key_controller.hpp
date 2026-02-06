@@ -11,6 +11,7 @@
 
 #include "../../selection_controller.hpp"
 #include "string.hpp"
+#include <ranges>
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QKeyEvent>
@@ -99,7 +100,7 @@ bool process_edit_key_event(Controller & controller, QKeyEvent * event) {
         return true;
     } else if (event->matches(QKeySequence::Paste)) {
         auto qstr = QGuiApplication::clipboard()->text();
-        controller.paste(qstring_to_std_string<char_t>(qstr));
+        controller.paste(qstring_to_chars<char_t>(qstr));
         event->accept();
         return true;
     } else if (event->matches(QKeySequence::Undo)) {
@@ -147,11 +148,18 @@ bool process_edit_key_event(Controller & controller, QKeyEvent * event) {
     default:
         // inserting single character if its printable
         if (!event->text().isEmpty()) {
-            auto str = qstring_to_std_string<char_t>(event->text());
-            if (str.size() == 1) {
+            auto chars = qstring_to_chars<char_t>(event->text());
+            if (std::ranges::size(chars) == 1) {
                 std::locale loc("");
-                auto ch = str[0];
-                if (std::isprint(ch, loc)) {
+                auto ch = *std::ranges::begin(chars);
+                auto ch_value = [&] {
+                    if constexpr (requires { ch.character(); }) {
+                        return ch.character();
+                    } else {
+                        return ch;
+                    }
+                }();
+                if (std::isprint(ch_value, loc)) {
                     controller.do_char(ch);
                     event->accept();
                     return true;

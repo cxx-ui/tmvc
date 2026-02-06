@@ -9,7 +9,12 @@
 
 #pragma once
 
+#include "../../text_model.hpp"
+#include <ranges>
 #include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 #include <QString>
 
 
@@ -53,12 +58,49 @@ std::basic_string<Char> qstring_to_std_string(const QString & str) {
 /// Converts characters range to QString
 template <typename CharsRange>
 QString chars_to_qstring(CharsRange && chars) {
-    if constexpr (std::same_as<std::ranges::range_value_t<CharsRange>, wchar_t>) {
+    using value_t = std::ranges::range_value_t<CharsRange>;
+
+    if constexpr (text_model_character<value_t> && !std_character<value_t>) {
+        using char_t = decltype(std::declval<value_t>().character());
+        std::basic_string<char_t> str;
+        if constexpr (requires { std::ranges::size(chars); }) {
+            str.reserve(std::ranges::size(chars));
+        }
+        for (const auto & ch : chars) {
+            str.push_back(ch.character());
+        }
+        return std_string_to_qstring(str);
+    } else if constexpr (std::same_as<value_t, wchar_t>) {
         std::wstring str{std::ranges::begin(chars), std::ranges::end(chars)};
         return std_string_to_qstring(str);
     } else {
         std::string str{std::ranges::begin(chars), std::ranges::end(chars)};
         return std_string_to_qstring(str);
+    }
+}
+
+/// Converts QString to character range (std::basic_string or vector)
+template <typename Char>
+auto qstring_to_chars(const QString & str) {
+    if constexpr (std::same_as<Char, char>) {
+        return qstring_to_std_string<char>(str);
+    } else if constexpr (std::same_as<Char, wchar_t>) {
+        return qstring_to_std_string<wchar_t>(str);
+    } else if constexpr (std::same_as<Char, char16_t>) {
+        return qstring_to_std_string<char16_t>(str);
+    } else if constexpr (std::same_as<Char, char32_t>) {
+        return qstring_to_std_string<char32_t>(str);
+    } else if constexpr (text_model_character<Char> && !std_character<Char>) {
+        using value_t = decltype(std::declval<Char>().character());
+        auto plain = qstring_to_std_string<value_t>(str);
+        std::vector<Char> out;
+        out.reserve(plain.size());
+        for (auto ch : plain) {
+            out.emplace_back(ch);
+        }
+        return out;
+    } else {
+        static_assert(!std::is_same_v<Char, Char>, "unknown character type for conversion");
     }
 }
 

@@ -12,6 +12,7 @@
 #include "std_character.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 
 
@@ -63,8 +64,8 @@ public:
     constexpr text_format() = default;
 
     /// Constructs text format with specified colors and style flags
-    constexpr text_format(const color & fg,
-                          const color & bg,
+    constexpr text_format(const std::optional<color> & fg,
+                          const std::optional<color> & bg,
                           bool bold,
                           bool italic,
                           bool underline,
@@ -76,17 +77,29 @@ public:
         underline_{underline},
         strikethrough_{strikethrough} {}
 
-    /// Returns foreground color
-    constexpr const color & foreground() const { return foreground_; }
+    /// Returns optional foreground color
+    constexpr const std::optional<color> & foreground() const { return foreground_; }
 
-    /// Returns foreground color
-    constexpr color & foreground() { return foreground_; }
+    /// Returns optional foreground color
+    constexpr std::optional<color> & foreground() { return foreground_; }
 
-    /// Returns background color
-    constexpr const color & background() const { return background_; }
+    /// Sets foreground color
+    constexpr void set_foreground(const color & fg) { foreground_ = fg; }
 
-    /// Returns background color
-    constexpr color & background() { return background_; }
+    /// Clears foreground color
+    constexpr void clear_foreground() { foreground_.reset(); }
+
+    /// Returns optional background color
+    constexpr const std::optional<color> & background() const { return background_; }
+
+    /// Returns optional background color
+    constexpr std::optional<color> & background() { return background_; }
+
+    /// Sets background color
+    constexpr void set_background(const color & bg) { background_ = bg; }
+
+    /// Clears background color
+    constexpr void clear_background() { background_.reset(); }
 
     /// Returns bold flag
     constexpr bool bold() const { return bold_; }
@@ -116,8 +129,8 @@ public:
     friend constexpr bool operator==(const text_format &, const text_format &) = default;
 
 private:
-    color foreground_;           ///< Foreground color
-    color background_;           ///< Background color
+    std::optional<color> foreground_;  ///< Optional foreground color
+    std::optional<color> background_;  ///< Optional background color
     bool bold_ = false;          ///< Bold flag
     bool italic_ = false;        ///< Italic flag
     bool underline_ = false;     ///< Underline flag

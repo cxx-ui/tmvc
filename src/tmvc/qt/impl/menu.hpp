@@ -29,7 +29,7 @@ QAction * add_menu_copy_action(QMenu * menu, Controller & controller) {
     copy->setEnabled(controller.can_copy());
     QObject::connect(copy, &QAction::triggered, [&controller] {
         auto str = controller.copy();
-        QGuiApplication::clipboard()->setText(std_string_to_qstring(str));
+        QGuiApplication::clipboard()->setText(chars_to_qstring(str));
     });
     return copy;
 }
@@ -81,7 +81,7 @@ QAction * add_menu_cut_action(QMenu * menu, Controller & controller) {
     cut->setEnabled(controller.can_cut());
     QObject::connect(cut, &QAction::triggered, [&controller] {
         auto str = controller.cut();
-        QGuiApplication::clipboard()->setText(std_string_to_qstring(str));
+        QGuiApplication::clipboard()->setText(chars_to_qstring(str));
     });
     return cut;
 }
@@ -97,7 +97,7 @@ QAction * add_menu_paste_action(QMenu * menu, Controller & controller) {
     paste->setEnabled(!clipboard->text().isEmpty());
     QObject::connect(paste, &QAction::triggered, [&controller] {
         auto qstr = QGuiApplication::clipboard()->text();
-        controller.paste(qstring_to_std_string<typename Controller::char_t>(qstr));
+        controller.paste(qstring_to_chars<typename Controller::char_t>(qstr));
     });
     return paste;
 }

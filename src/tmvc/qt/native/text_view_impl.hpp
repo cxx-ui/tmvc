@@ -12,6 +12,7 @@
 #include "controller.hpp"
 #include "selection_model.hpp"
 #include "../impl/key_controller.hpp"
+#include "../impl/formatted_char.hpp"
 #include "../impl/string.hpp"
 #include "../impl/utils.hpp"
 #include "../../edit_controller.hpp"
@@ -182,7 +183,15 @@ private:
         this->setReadOnly(is_const);
 
         // setting text in view
-        this->setPlainText(impl::std_string_to_qstring(characters_str(text_)));
+        if constexpr (text_model_character<typename Model::char_t> &&
+                      !std_character<typename Model::char_t>) {
+            this->setPlainText(QString{});
+            auto cursor = this->textCursor();
+            impl::insert_formatted_chars(cursor, characters_vector(text_));
+            this->setTextCursor(cursor);
+        } else {
+            this->setPlainText(impl::chars_to_qstring(characters(text_)));
+        }
 
         // listening for changes in text model
         after_inserted_con_ = text_.after_inserted.connect([this](const range & r) {
@@ -231,11 +240,17 @@ private:
         if (ignore_model_changes_) {
             return;
         }
-    
-        auto chars = impl::std_string_to_qstring(characters_str(text_, r));
-    
+
         is_updating_view_ = true;
-        impl::get_qt_cursor_for_selection(this, r.start, r.start).insertText(chars);
+        auto cursor = impl::get_qt_cursor_for_selection(this, r.start, r.start);
+        if constexpr (text_model_character<typename Model::char_t> &&
+                      !std_character<typename Model::char_t>) {
+            auto chars = characters_vector(text_, r);
+            impl::insert_formatted_chars(cursor, chars);
+        } else {
+            auto chars = impl::chars_to_qstring(characters(text_, r));
+            cursor.insertText(chars);
+        }
         is_updating_view_ = false;
     }
 
@@ -255,14 +270,20 @@ private:
         if (ignore_model_changes_) {
             return;
         }
-    
-        auto chars = impl::std_string_to_qstring(characters_str(text_, r));
-    
+
         // preserving cursor position when replacing text
         auto [anchor_pos, pos] = impl::get_selection_from_text_edit(this);
-    
+
         is_updating_view_ = true;
-        impl::get_qt_cursor_for_selection(this, r.start, r.end).insertText(chars);
+        auto cursor = impl::get_qt_cursor_for_selection(this, r.start, r.end);
+        if constexpr (text_model_character<typename Model::char_t> &&
+                      !std_character<typename Model::char_t>) {
+            auto chars = characters_vector(text_, r);
+            impl::insert_formatted_chars(cursor, chars);
+        } else {
+            auto chars = impl::chars_to_qstring(characters(text_, r));
+            cursor.insertText(chars);
+        }
         this->setTextCursor(impl::get_qt_cursor_for_selection(this, anchor_pos, pos));
         is_updating_view_ = false;
     }
@@ -287,9 +308,19 @@ private:
 
         // inserting characters
         if (inserted != 0) {
-            auto inserted_qstr = this->toPlainText().mid(pos, inserted);
-            auto inserted_str = impl::qstring_to_std_string<typename Model::char_t>(inserted_qstr);
-            text_.insert(*change_pos_it, inserted_str);
+            if constexpr (text_model_character<typename Model::char_t> &&
+                          !std_character<typename Model::char_t>) {
+                QTextCursor cursor(this->document());
+                cursor.setPosition(pos);
+                cursor.setPosition(pos + inserted, QTextCursor::KeepAnchor);
+                using base_char_t = ::tmvc::impl::char_value_t<typename Model::char_t>;
+                auto inserted_chars = impl::read_formatted_chars<base_char_t>(cursor);
+                text_.insert(*change_pos_it, inserted_chars);
+            } else {
+                auto inserted_qstr = this->toPlainText().mid(pos, inserted);
+                auto inserted_chars = impl::qstring_to_chars<typename Model::char_t>(inserted_qstr);
+                text_.insert(*change_pos_it, inserted_chars);
+            }
         }
 
         ignore_model_changes_ = false;

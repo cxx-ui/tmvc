@@ -16,3 +16,4 @@ target_link_libraries(tmvc-qt INTERFACE tmvc)
 target_link_libraries(tmvc-qt INTERFACE ${qt_name}::Widgets)
 
 add_subdirectory(examples)
+add_subdirectory(test)

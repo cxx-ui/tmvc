@@ -9,6 +9,7 @@
 
 #include "../../../preserving_viewport_position_model.hpp"
 #include "../../../basic_text_view_model.hpp"
+#include "../../../formatted_char.hpp"
 #include "../../../simple_text_model.hpp"
 #include "../../../single_edit_controller.hpp"
 #include "../../../single_selection_model.hpp"
@@ -26,12 +27,12 @@ private:
     /// Called when user selects open menu item
     void open_file();
 
-    using text_model_t = tmvc::wsimple_text_model;
+    using text_model_t = tmvc::basic_simple_text_model<tmvc::wformatted_char>;
     using selection_model_t = tmvc::single_selection_model<text_model_t>;
     using controller_t = tmvc::single_edit_controller<text_model_t>;
 
     text_model_t text_;
     selection_model_t selection_{text_};
-    tmvc::modification_history<wchar_t> history_;
+    tmvc::modification_history<text_model_t::char_t> history_;
     controller_t controller_{text_, selection_, history_};
 };
