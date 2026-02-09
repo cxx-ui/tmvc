@@ -64,12 +64,12 @@ void assign_formatted(ftext_t & mdl, std::wstring_view str) {
 } // namespace
 
 
-struct simple_text_model_test_fixture {
+struct simple_formatted_text_model_test_fixture {
     ftext_t text;
 };
 
 
-BOOST_FIXTURE_TEST_SUITE(simple_formatted_text_model_test, simple_text_model_test_fixture)
+BOOST_FIXTURE_TEST_SUITE(simple_formatted_text_model_test, simple_formatted_text_model_test_fixture)
 
 
 /// Tests default construction
