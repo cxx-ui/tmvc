@@ -88,6 +88,43 @@ BOOST_AUTO_TEST_CASE(adjust_pos_after_erase_after_range_multiline) {
     BOOST_CHECK_EQUAL(res.column, 7);
 }
 
+BOOST_AUTO_TEST_CASE(adjust_range_after_insert_before_range) {
+    range rng{{0, 5}, {0, 15}};
+    range ins{{0, 3}, {0, 5}};
+    auto res = adjust_range_after_insert(rng, ins);
+    BOOST_CHECK_EQUAL(res.start.line, 0);
+    BOOST_CHECK_EQUAL(res.start.column, 7);
+    BOOST_CHECK_EQUAL(res.end.line, 0);
+    BOOST_CHECK_EQUAL(res.end.column, 17);
+}
+
+BOOST_AUTO_TEST_CASE(adjust_range_after_insert_inside_range) {
+    range rng{{0, 5}, {0, 15}};
+    range ins{{0, 7}, {0, 10}};
+    auto res = adjust_range_after_insert(rng, ins);
+    BOOST_CHECK_EQUAL(res.start.line, 0);
+    BOOST_CHECK_EQUAL(res.start.column, 5);
+    BOOST_CHECK_EQUAL(res.end.line, 0);
+    BOOST_CHECK_EQUAL(res.end.column, 18);
+}
+
+BOOST_AUTO_TEST_CASE(adjust_range_after_erase_partial_overlap) {
+    range rng{{0, 5}, {0, 15}};
+    range del{{0, 8}, {0, 10}};
+    auto res = adjust_range_after_erase(rng, del);
+    BOOST_CHECK_EQUAL(res.start.line, 0);
+    BOOST_CHECK_EQUAL(res.start.column, 5);
+    BOOST_CHECK_EQUAL(res.end.line, 0);
+    BOOST_CHECK_EQUAL(res.end.column, 13);
+}
+
+BOOST_AUTO_TEST_CASE(adjust_range_after_erase_entire_range) {
+    range rng{{0, 5}, {0, 15}};
+    range del{{0, 4}, {0, 20}};
+    auto res = adjust_range_after_erase(rng, del);
+    BOOST_CHECK(res.empty());
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

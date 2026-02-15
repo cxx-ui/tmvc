@@ -70,5 +70,21 @@ inline position adjust_pos_after_erase(const position & pos, const range & r) {
     return new_pos;
 }
 
+/// Returns range adjusted after insertion in specified range.
+inline range adjust_range_after_insert(const range & rng, const range & r) {
+    return {
+        adjust_pos_after_insert(rng.start, r, true),
+        adjust_pos_after_insert(rng.end, r, false)
+    };
+}
+
+/// Returns range adjusted after deleting text in specified range.
+inline range adjust_range_after_erase(const range & rng, const range & r) {
+    return {
+        adjust_pos_after_erase(rng.start, r),
+        adjust_pos_after_erase(rng.end, r)
+    };
+}
+
 
 }
