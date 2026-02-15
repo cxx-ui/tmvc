@@ -5,6 +5,7 @@ add_executable(tmvc-test
                editor_controller_test.cpp
                formatted_editor_controller_test.cpp
                line_numbers_text_model_test.cpp
+               range_test.cpp
                ../qt/test/formatted_char_test.cpp
                simple_formatted_text_model_test.cpp
                simple_text_model_test.cpp

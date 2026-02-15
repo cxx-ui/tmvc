@@ -124,26 +124,13 @@ private:
         auto new_anchor_pos = anchor_pos(); 
 
         if (r.start < new_pos || (r.start == new_pos && move_pos_after_insert_)) {
-
-            if (new_pos.line == r.start.line) {
-                // original position was on same line as insert position.
-                // column of new position should be equal to length of the last line
-                // of inserted range + offset from insert position to old
-                // current position
-                new_pos.column = r.end.column + (new_pos.column - r.start.column);
-            }
-
-            new_pos.line += (r.end.line - r.start.line);
+            new_pos = adjust_pos_after_insert(new_pos, r, move_pos_after_insert_);
 
             if (new_anchor_pos < r.start) {
                 new_anchor_pos = new_pos;
             } else {
-                if (new_anchor_pos.line == r.start.line) {
-                    // same as for pos_
-                    new_anchor_pos.column = r.end.column + (new_anchor_pos.column - r.start.column);
-                }
-
-                new_anchor_pos.line += (r.end.line - r.start.line);
+                // same as for pos_
+                new_anchor_pos = adjust_pos_after_insert(new_anchor_pos, r);
             }
         } else {
             if (new_anchor_pos > r.start) {
@@ -164,25 +151,12 @@ private:
         // relative to delete range
         if (new_pos > r.end) {
             // current position is located after delete range
-
-            if (r.end.line == new_pos.line) {
-                assert(new_pos.column > r.end.column && "invalid column for current pos");
-                new_pos.line = r.start.line;
-                new_pos.column = r.start.column + new_pos.column - r.end.column;
-            } else {
-                new_pos.line = new_pos.line - (r.end.line - r.start.line);
-            }
+            new_pos = adjust_pos_after_erase(new_pos, r);
 
             if (new_anchor_pos < r.end) {
                 new_anchor_pos = new_pos;
             } else {
-                if (r.end.line == new_anchor_pos.line) {
-                    assert(new_anchor_pos.column >= r.end.column && "invalid column for current pos");
-                    new_anchor_pos.line = r.start.line;
-                    new_anchor_pos.column = r.start.column + new_anchor_pos.column - r.end.column;
-                } else {
-                    new_anchor_pos.line = new_anchor_pos.line - (r.end.line - r.start.line);
-                }
+                new_anchor_pos = adjust_pos_after_erase(new_anchor_pos, r);
             }
         } else if (r.start < new_pos) {
             // current position is located inside delete range
