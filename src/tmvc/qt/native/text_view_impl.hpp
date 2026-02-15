@@ -131,6 +131,11 @@ protected:
     /// Handles mouse press event
     void mousePressEvent(QMouseEvent * event) override {
         if constexpr (selection_controller_with_mouse<Controller>) {
+            if (event->button() != Qt::LeftButton) {
+                QtTextEdit::mousePressEvent(event);
+                return;
+            }
+
             auto cursor = this->cursorForPosition(event->pos());
             auto pos = impl::get_position_from_cursor(cursor);
             auto modifiers = QApplication::keyboardModifiers();
@@ -147,6 +152,11 @@ protected:
     /// Handles mouse release event
     void mouseReleaseEvent(QMouseEvent * event) override {
         if constexpr (selection_controller_with_mouse<Controller>) {
+            if (event->button() != Qt::LeftButton) {
+                QtTextEdit::mouseReleaseEvent(event);
+                return;
+            }
+
             auto cursor = this->cursorForPosition(event->pos());
             auto pos = impl::get_position_from_cursor(cursor);
             auto modifiers = QApplication::keyboardModifiers();
@@ -163,6 +173,11 @@ protected:
     /// Handles mouse move event
     void mouseMoveEvent(QMouseEvent * event) override {
         if constexpr (selection_controller_with_mouse<Controller>) {
+            if (!(event->buttons() & Qt::LeftButton)) {
+                QtTextEdit::mouseMoveEvent(event);
+                return;
+            }
+
             auto cursor = this->cursorForPosition(event->pos());
             auto pos = impl::get_position_from_cursor(cursor);
             auto modifiers = QApplication::keyboardModifiers();
