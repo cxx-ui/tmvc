@@ -39,6 +39,14 @@ void assign(TextModel & mdl, const text_model_string<TextModel> & t) {
     mdl.insert({0, 0}, t);
 }
 
+/// Replaces text in specified range with new range of characters
+template <editable_text_model TextModel, typename Range>
+requires characters_range<Range, typename TextModel::char_t>
+void replace(TextModel & mdl, const range & r, Range && t) {
+    mdl.erase(r);
+    mdl.insert(r.start, std::forward<Range>(t));
+}
+
 /// Removes all text in text mode
 void clear(editable_text_model auto & mdl) {
     mdl.erase({begin_pos(mdl), end_pos(mdl)});

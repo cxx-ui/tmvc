@@ -545,6 +545,37 @@ BOOST_AUTO_TEST_CASE(test_replace_characters) {
 }
 
 
+/// Tests free replace helper (erase + insert)
+BOOST_AUTO_TEST_CASE(test_replace_range_helper) {
+    assign(text, L"the old text\nsecond line");
+
+    int n_before_inserted = 0;
+    int n_after_inserted = 0;
+    int n_before_erased = 0;
+    int n_after_erased = 0;
+    int n_before_replaced = 0;
+    int n_after_replaced = 0;
+
+    text.before_inserted.connect([&](auto &&) { ++n_before_inserted; });
+    text.after_inserted.connect([&](auto &&) { ++n_after_inserted; });
+    text.before_erased.connect([&](auto &&) { ++n_before_erased; });
+    text.after_erased.connect([&](auto &&) { ++n_after_erased; });
+    text.before_replaced.connect([&](auto &&) { ++n_before_replaced; });
+    text.after_replaced.connect([&](auto &&) { ++n_after_replaced; });
+
+    std::vector<wchar_t> repl{L'n', L'e', L'w'};
+    tmvc::replace(text, {{0, 4}, {0, 7}}, repl);
+
+    BOOST_CHECK(string(text) == L"the new text\nsecond line");
+    BOOST_CHECK_EQUAL(n_before_erased, 1);
+    BOOST_CHECK_EQUAL(n_after_erased, 1);
+    BOOST_CHECK_EQUAL(n_before_inserted, 1);
+    BOOST_CHECK_EQUAL(n_after_inserted, 1);
+    BOOST_CHECK_EQUAL(n_before_replaced, 0);
+    BOOST_CHECK_EQUAL(n_after_replaced, 0);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
