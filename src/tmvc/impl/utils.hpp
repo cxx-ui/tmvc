@@ -66,7 +66,11 @@ split_chars_to_lines(CharsRange && chars) {
             continue;
         }
 
-        if (ch == static_cast<char_value_t<decltype(ch)>>('\n')) {
+        if (ch == static_cast<char_value_t<decltype(ch)>>('\n') ||
+
+            // paragraph end character
+            ch == static_cast<char_value_t<decltype(ch)>>(0x2029)) {
+
             lines.push_back(new_line);
             new_line = std::make_shared<std::vector<Char>>();
         } else {
