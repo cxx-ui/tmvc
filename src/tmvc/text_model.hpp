@@ -210,6 +210,31 @@ position prev_pos(const text_model auto & mdl, const position & p) {
     }
 }
 
+/// Returns position advanced by specified number of characters from position p.
+position advance_pos(const text_model auto & mdl, const position & p, size_t chars_count) {
+    assert(pos_is_valid(mdl, p) && "position should be valid");
+
+    auto cur = p;
+    while (chars_count != 0) {
+        auto line_size = mdl.line_size(cur.line);
+        if (cur.column + chars_count <= line_size) {
+            return {cur.line, cur.column + chars_count};
+        }
+
+        assert(cur.line + 1 < mdl.lines_size() &&
+               "can't advance position past the end position");
+
+        // Move to the end of current line.
+        chars_count -= (line_size - cur.column);
+        // Move to the next line start (newline transition).
+        --chars_count;
+        ++cur.line;
+        cur.column = 0;
+    }
+
+    return cur;
+}
+
 
 /// Returns iterator pointing to position of start of text in text model
 auto positions_begin(const text_model auto & mdl) {

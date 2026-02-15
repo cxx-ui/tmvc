@@ -87,6 +87,38 @@ BOOST_AUTO_TEST_CASE(iterate_positions) {
     BOOST_CHECK_EQUAL(it->column, 2);
 }
 
+/// Tests advance_pos with zero offset
+BOOST_AUTO_TEST_CASE(advance_pos_zero) {
+    text.reset(L"12\n34");
+    auto pos = advance_pos(text, {0, 1}, 0);
+    BOOST_CHECK_EQUAL(pos.line, 0);
+    BOOST_CHECK_EQUAL(pos.column, 1);
+}
+
+/// Tests advance_pos on same line
+BOOST_AUTO_TEST_CASE(advance_pos_same_line) {
+    text.reset(L"12345");
+    auto pos = advance_pos(text, {0, 1}, 3);
+    BOOST_CHECK_EQUAL(pos.line, 0);
+    BOOST_CHECK_EQUAL(pos.column, 4);
+}
+
+/// Tests advance_pos across line break
+BOOST_AUTO_TEST_CASE(advance_pos_multiline) {
+    text.reset(L"12\n345");
+    auto pos = advance_pos(text, {0, 1}, 3);
+    BOOST_CHECK_EQUAL(pos.line, 1);
+    BOOST_CHECK_EQUAL(pos.column, 1);
+}
+
+/// Tests advance_pos across multiple line boundaries
+BOOST_AUTO_TEST_CASE(advance_pos_multiple_lines) {
+    text.reset(L"ab\ncd\nefgh");
+    auto pos = advance_pos(text, {0, 0}, 7);
+    BOOST_CHECK_EQUAL(pos.line, 2);
+    BOOST_CHECK_EQUAL(pos.column, 1);
+}
+
 
 /// Tests iterating over characters
 BOOST_AUTO_TEST_CASE(iterate_chars) {
