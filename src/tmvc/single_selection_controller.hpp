@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "single_selection_model.hpp"
+#include "simple_single_selection_model.hpp"
 #include "std_selection_controller.hpp"
 
 
@@ -20,7 +20,7 @@ template <text_model TextModel>
 class single_selection_controller_base {
 public:
     /// Type of selection model
-    using selection_model_t = single_selection_model<TextModel>;
+    using selection_model_t = simple_single_selection_model<TextModel>;
 
     /// Constructs controller with specified references to text model and selection model
     single_selection_controller_base(selection_model_t & sel_mdl):
@@ -68,7 +68,7 @@ class single_selection_controller:
 
 public:
     /// Type of selection model
-    using selection_model_t = single_selection_model<TextModel>;
+    using selection_model_t = simple_single_selection_model<TextModel>;
 
     /// Constructs controller with specified references to text model and selection model
     single_selection_controller(const TextModel & text_mdl, selection_model_t & sel_mdl):

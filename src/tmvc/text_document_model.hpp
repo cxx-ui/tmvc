@@ -28,7 +28,7 @@ namespace tmvc {
 /// Text document model. Used with document_view to display text editor with line numbers.
 template <
     text_model TextModel,
-    selection_model SelectionModel = single_selection_model<TextModel>,
+    selection_model SelectionModel = simple_single_selection_model<TextModel>,
     viewport_position_model ViewportPositionModel = preserving_viewport_position_model<TextModel, SelectionModel>,
     selection_controller_for<TextModel> Controller = single_edit_controller<TextModel>
 >

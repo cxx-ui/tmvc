@@ -8,19 +8,19 @@
 /// Contains unit tests for the basic_simple_selection_model class.
 
 #include "../simple_text_model.hpp"
-#include "../single_selection_model.hpp"
+#include "../simple_single_selection_model.hpp"
 #include <boost/test/unit_test.hpp>
 
 
 namespace tmvc::test {
 
 
-static_assert(selection_model<single_selection_model<simple_text_model>>);
+static_assert(selection_model<simple_single_selection_model<simple_text_model>>);
 
 
 struct simple_selection_model_test_fixture {
     wsimple_text_model text;
-    single_selection_model<wsimple_text_model> selection{text};
+    simple_single_selection_model<wsimple_text_model> selection{text};
 };
 
 

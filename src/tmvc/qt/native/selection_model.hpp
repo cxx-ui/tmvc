@@ -21,7 +21,7 @@ struct std_selection_model {};
 
 /// Qt selection model concept for text model
 template <typename SelectionModel, typename TextModel>
-concept qt_selection_model = std::same_as<SelectionModel, single_selection_model<TextModel>> ||
+concept qt_selection_model = single_selection_model<SelectionModel> ||
                              std::same_as<SelectionModel, std_selection_model>;
 
 

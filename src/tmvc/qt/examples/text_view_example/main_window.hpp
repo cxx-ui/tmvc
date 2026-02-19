@@ -11,7 +11,7 @@
 #include "../../../basic_text_view_model.hpp"
 #include "../../../simple_text_model.hpp"
 #include "../../../single_edit_controller.hpp"
-#include "../../../single_selection_model.hpp"
+#include "../../../simple_single_selection_model.hpp"
 #include "../../../modification.hpp"
 #include <QMainWindow>
 
@@ -27,10 +27,10 @@ private:
     void open_file();
 
     using text_model_t = tmvc::wsimple_text_model;
-    using plain_selection_model_t = tmvc::single_selection_model<text_model_t>;
+    using plain_selection_model_t = tmvc::simple_single_selection_model<text_model_t>;
     using plain_controller_t = tmvc::single_edit_controller<text_model_t>;
 
-    using selection_model_t = tmvc::single_selection_model<text_model_t>;
+    using selection_model_t = tmvc::simple_single_selection_model<text_model_t>;
     using viewport_position_model_t = tmvc::preserving_viewport_position_model<text_model_t, selection_model_t>;
     using controller_t = tmvc::single_edit_controller<text_model_t>;
 

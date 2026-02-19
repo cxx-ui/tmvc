@@ -8,7 +8,7 @@
 /// Contains unit tests for single_edit_controller class.
 
 #include "../simple_text_model.hpp"
-#include "../single_selection_model.hpp"
+#include "../simple_single_selection_model.hpp"
 #include "../single_edit_controller.hpp"
 #include <boost/test/unit_test.hpp>
 
@@ -18,7 +18,7 @@ namespace tmvc::test {
 
 struct editor_controller_test_fixture {
     wsimple_text_model text;
-    single_selection_model<wsimple_text_model> selection{text};
+    simple_single_selection_model<wsimple_text_model> selection{text};
     modification_history<wchar_t> history;
     single_edit_controller<wsimple_text_model> controller{text, selection, history};
 };

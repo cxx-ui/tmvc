@@ -69,6 +69,9 @@ template <
     qt_selection_model<Model> SelectionModel,
     qt_selection_controller_for<Model> Controller
 >
+requires (!qt_std_controller<Controller> ||
+          editable_single_selection_model<SelectionModel> ||
+          std::same_as<SelectionModel, std_selection_model>)
 class text_view_impl:
         public QtTextEdit,
         private text_model_impl_controller_base<Controller>,
@@ -238,8 +241,7 @@ private:
         // 1. we are using user defined selection model
         // 2. we are using standard controller or user defined controller with mouse support
         if constexpr (!std::same_as<SelectionModel, std_selection_model> &&
-                      (qt_std_controller<Controller> ||
-                       selection_controller_with_mouse<Controller>)) {
+                      qt_std_controller<Controller>) {
 
             QObject::connect(this, &QtTextEdit::cursorPositionChanged, [this] {
                 on_view_selection_changed();
@@ -344,7 +346,7 @@ private:
     /// Called when selection in view is changed
     void on_view_selection_changed()
     requires (!std::same_as<SelectionModel, std_selection_model> &&
-              (qt_std_controller<Controller> || selection_controller_with_mouse<Controller>)) {
+              qt_std_controller<Controller>) {
         if (is_updating_view_) {
             return;
         }

@@ -12,7 +12,7 @@
 #include "../../../formatted_char.hpp"
 #include "../../../simple_text_model.hpp"
 #include "../../../single_edit_controller.hpp"
-#include "../../../single_selection_model.hpp"
+#include "../../../simple_single_selection_model.hpp"
 #include "../../../modification.hpp"
 #include <QMainWindow>
 
@@ -28,7 +28,7 @@ private:
     void open_file();
 
     using text_model_t = tmvc::basic_simple_text_model<tmvc::wformatted_char>;
-    using selection_model_t = tmvc::single_selection_model<text_model_t>;
+    using selection_model_t = tmvc::simple_single_selection_model<text_model_t>;
     using controller_t = tmvc::single_edit_controller<text_model_t>;
 
     text_model_t text_;

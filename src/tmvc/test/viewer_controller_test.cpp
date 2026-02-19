@@ -9,7 +9,7 @@
 
 #include "../simple_text_model.hpp"
 #include "../single_selection_controller.hpp"
-#include "../single_selection_model.hpp"
+#include "../simple_single_selection_model.hpp"
 #include <boost/test/unit_test.hpp>
 
 
@@ -18,7 +18,7 @@ namespace tmvc::test {
 
 struct viewer_controller_test_fixture {
     wsimple_text_model text;
-    single_selection_model<wsimple_text_model> selection{text};
+    simple_single_selection_model<wsimple_text_model> selection{text};
     single_selection_controller<wsimple_text_model> controller{text, selection};
 };
 

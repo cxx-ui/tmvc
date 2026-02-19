@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "single_selection_model.hpp"
+#include "simple_single_selection_model.hpp"
 #include "single_selection_controller.hpp"
 #include "std_edit_controller.hpp"
 
@@ -40,7 +40,7 @@ public:
     using char_t = typename TextModel::char_t;
 
     /// Type of selection model
-    using selection_model_t = single_selection_model<TextModel>;
+    using selection_model_t = simple_single_selection_model<TextModel>;
 
     /// Type of modification history
     using modification_history_t = modification_history<typename text_model_t::char_t>;

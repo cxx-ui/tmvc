@@ -9,7 +9,7 @@
 
 #include "../formatted_char.hpp"
 #include "../simple_text_model.hpp"
-#include "../single_selection_model.hpp"
+#include "../simple_single_selection_model.hpp"
 #include "../single_edit_controller.hpp"
 #include <boost/test/unit_test.hpp>
 #include <string_view>
@@ -51,7 +51,7 @@ std::wstring formatted_string(const ftext_t & mdl) {
 
 struct formatted_editor_controller_test_fixture {
     ftext_t text;
-    single_selection_model<ftext_t> selection{text};
+    simple_single_selection_model<ftext_t> selection{text};
     modification_history<fchar_t> history;
     single_edit_controller<ftext_t> controller{text, selection, history};
 };

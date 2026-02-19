@@ -73,7 +73,7 @@ main_window::main_window() {
 
         using view_t = tmvc::qt::native::plain_text_view <
             tmvc::wsimple_text_model,
-            tmvc::single_selection_model<tmvc::wsimple_text_model>,
+            tmvc::simple_single_selection_model<tmvc::wsimple_text_model>,
             tmvc::qt::native::std_edit_controller
         >;
 
@@ -91,7 +91,7 @@ main_window::main_window() {
 
         using view_t = tmvc::qt::native::plain_text_view <
             tmvc::wsimple_text_model,
-            tmvc::single_selection_model<tmvc::wsimple_text_model>,
+            tmvc::simple_single_selection_model<tmvc::wsimple_text_model>,
             plain_controller_t
         >;
 

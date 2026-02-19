@@ -34,16 +34,4 @@ concept selection_model = requires (const SelectionModel & csel) {
 };
 
 
-/// Returns selected range of text taking into account correct order
-/// of current position and selection anchor
-template <selection_model SelectionModel>
-range selected_range(const SelectionModel & sel) {
-    if (sel.anchor_pos() <= sel.pos()) {
-        return {sel.anchor_pos(), sel.pos()};
-    } else {
-        return {sel.pos(), sel.anchor_pos()};
-    }
-}
-
-
 }

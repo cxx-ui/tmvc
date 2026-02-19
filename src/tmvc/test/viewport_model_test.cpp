@@ -9,7 +9,7 @@
 
 #include "../preserving_viewport_position_model.hpp"
 #include "../simple_text_model.hpp"
-#include "../single_selection_model.hpp"
+#include "../simple_single_selection_model.hpp"
 #include "../impl/viewport_model.hpp"
 #include <boost/test/unit_test.hpp>
 
@@ -19,7 +19,7 @@ namespace tmvc::impl::test {
 
 struct viewport_model_test_fixture {
     using text_model_t = wsimple_text_model;
-    using selection_model_t = single_selection_model<wsimple_text_model>;
+    using selection_model_t = simple_single_selection_model<wsimple_text_model>;
     using viewport_position_model_t = preserving_viewport_position_model<text_model_t, selection_model_t>;
     using viewport_model_t = viewport_model<text_model_t, selection_model_t, viewport_position_model_t>;
 
