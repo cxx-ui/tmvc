@@ -1,0 +1,550 @@
+// Copyright (c) 2025, Alexandr Esilevich
+//
+// Distributed under the Boost Software License.
+// See accompanying file LICENSE for license information.
+//
+
+/// \file text_data.hpp
+/// Contains definition of text data concepts and related functions.
+
+#pragma once
+
+#include "position.hpp"
+#include "range.hpp"
+#include "std_character.hpp"
+#include <cctype>
+#include <cwctype>
+#include <iterator>
+#include <ranges>
+#include <string>
+
+
+namespace tmvc {
+
+
+/// Represents text model character (standard character or type with character() method)
+template <typename Char>
+concept text_character = std_character<Char> ||
+requires(const Char & c) {
+    { c.character() } -> std_character;
+    { c == std::declval<char>() } -> std::convertible_to<bool>;
+    { std::declval<char>() == c } -> std::convertible_to<bool>;
+};
+
+
+/// Represents read only text data
+template <typename TextData>
+concept text_data = requires(const TextData & mdl) {
+    /// Character type
+    typename TextData::char_t;
+    requires text_character<typename TextData::char_t>;
+
+    // Returns number of lines in text
+    { mdl.lines_size() } -> std::convertible_to<uint64_t>;
+
+    // Returns length of line at specified index
+    { mdl.line_size(std::declval<uint64_t>()) } -> std::convertible_to<uint64_t>;
+
+    /// Returns character at specified position
+    { mdl.char_at(std::declval<position>()) } -> std::convertible_to<typename TextData::char_t>;
+};
+
+
+/// Text data with known maximum line size
+template <typename TextData>
+concept text_data_with_max_line_size = text_data<TextData> && requires (const TextData & mdl) {
+    /// Returns maximum line size in text model
+    { mdl.max_line_size() } -> std::convertible_to<uint64_t>;
+
+    /// The signal is emitted when maximum line size in text model is changed
+    { mdl.max_line_size_changed } -> std::convertible_to<signal<void ()> &>;
+};
+
+
+/// Alias for type of std string for characters in text model
+template <text_data TextData>
+requires std_character<typename TextData::char_t>
+using text_data_string = std::basic_string<typename TextData::char_t>;
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+/// Iterator over positions in text model
+template <typename TextData>
+class text_data_position_const_iterator:
+    public boost::iterator_facade <
+        text_data_position_const_iterator<TextData>,
+        position,
+        std::bidirectional_iterator_tag,
+        position,
+        int64_t
+    >
+{
+public:
+    /// Constructs invalid iterator
+    text_data_position_const_iterator() {}
+
+    /// Constructs iterator for specified model and position
+    explicit text_data_position_const_iterator(const TextData * mdl, const position & p):
+        model_{mdl}, pos_{p} {}
+
+    /// Copy constructor
+    text_data_position_const_iterator(const text_data_position_const_iterator &) = default;
+
+    /// Returns text position stored in iterator
+    position pos() const {
+        return pos_;
+    }
+
+    /// Moves iterator to the next position
+    void increment() {
+        assert(model_ != nullptr && "invalid iterator");
+        pos_ = next_pos(*model_, pos_);
+    }
+
+    /// Moves iterator to the previous position
+    void decrement() {
+        assert(model_ != nullptr && "invalid iterator");
+        pos_ = prev_pos(*model_, pos_);
+    }
+
+    /// Compares this iterator with another
+    bool equal(const text_data_position_const_iterator & other) const {
+        return pos() == other.pos();
+    }
+
+    /// Dereferences iterator
+    position dereference() const {
+        return pos();
+    }
+
+private:
+    const TextData * model_ = nullptr;     ///< Pointer to text model
+    position pos_;                          ///< Position in text model
+};
+
+
+/// Returns true if position is correct for text model
+bool pos_is_valid(const text_data auto & mdl, const position & p) {
+    if (p.line >= mdl.lines_size()) {
+        return false;
+    }
+
+    return p.column <= mdl.line_size(p.line);
+}
+
+
+/// Returns begin position for text model (always returns {0, 0})
+position begin_pos(const text_data auto & mdl) {
+    return {0, 0};
+}
+
+
+/// Returns end position for text model
+position end_pos(const text_data auto & mdl) {
+    assert(mdl.lines_size() != 0 && "text model must contain at least single line");
+    auto last_line_idx = mdl.lines_size() - 1;
+    return {last_line_idx, mdl.line_size(last_line_idx)};
+}
+
+/// Returns position after specified position in text model
+position next_pos(const text_data auto & mdl, const position & p) {
+    assert(pos_is_valid(mdl, p) && "position should be valid");
+
+    if (mdl.line_size(p.line) > p.column) {
+        return {p.line, p.column + 1};
+    } else {
+        assert(p.line + 1 < mdl.lines_size() && "can't get next position for the end position");
+        return {p.line + 1, 0};
+    }
+}
+
+/// Returns position before specified position in text model
+position prev_pos(const text_data auto & mdl, const position & p) {
+    assert(pos_is_valid(mdl, p) && "position should be valid");
+
+    if (p.column > 0) {
+        return {p.line, p.column - 1};
+    } else {
+        assert(p.line > 0 && "can't get prev position for the beginning position");
+        return {p.line - 1, mdl.line_size(p.line - 1)};
+    }
+}
+
+/// Returns position advanced by specified number of characters from position p.
+position advance_pos(const text_data auto & mdl, const position & p, size_t chars_count) {
+    assert(pos_is_valid(mdl, p) && "position should be valid");
+
+    auto cur = p;
+    while (chars_count != 0) {
+        auto line_size = mdl.line_size(cur.line);
+        if (cur.column + chars_count <= line_size) {
+            return {cur.line, cur.column + chars_count};
+        }
+
+        assert(cur.line + 1 < mdl.lines_size() &&
+               "can't advance position past the end position");
+
+        // Move to the end of current line.
+        chars_count -= (line_size - cur.column);
+        // Move to the next line start (newline transition).
+        --chars_count;
+        ++cur.line;
+        cur.column = 0;
+    }
+
+    return cur;
+}
+
+
+/// Returns iterator pointing to position of start of text in text model
+auto positions_begin(const text_data auto & mdl) {
+    return text_data_position_const_iterator{&mdl, begin_pos(mdl)};
+}
+
+/// Returns iterator pointing to position of end of text in text model
+auto positions_end(const text_data auto & mdl) {
+    return text_data_position_const_iterator{&mdl, end_pos(mdl)};
+}
+
+/// Returns iterator pointing to specified position
+auto positions_iterator_at(const text_data auto & mdl, const position & p) {
+    return text_data_position_const_iterator{&mdl, p};
+}
+
+/// Returns range of positions in text model
+auto positions(const text_data auto & mdl) {
+    return std::ranges::subrange(positions_begin(mdl), positions_end(mdl));
+}
+
+/// Returns range of positions for specified text range
+auto positions(const text_data auto & mdl, const range & r) {
+    return std::ranges::subrange(positions_iterator_at(mdl, r.start), positions_iterator_at(mdl, r.end));
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+/// Const iterator over characters in text model
+template <typename TextData>
+class text_data_characters_const_iterator:
+    public boost::iterator_adaptor <
+        text_data_characters_const_iterator<TextData>,
+        text_data_position_const_iterator<TextData>,
+        typename TextData::char_t,
+        std::bidirectional_iterator_tag,
+        typename TextData::char_t,
+        int64_t
+    >,
+    public std::bidirectional_iterator_tag
+{
+    using base_type = boost::iterator_adaptor <
+        text_data_characters_const_iterator<TextData>,
+        text_data_position_const_iterator<TextData>,
+        typename TextData::char_t,
+        std::bidirectional_iterator_tag,
+        typename TextData::char_t,
+        int64_t
+    >;
+
+public:
+    /// Constructs invalid iterator
+    text_data_characters_const_iterator() = default;
+
+    /// Copy constructor
+    text_data_characters_const_iterator(const text_data_characters_const_iterator &) = default;
+
+    /// Constructs iterator from position iterator
+    explicit text_data_characters_const_iterator(const TextData & mdl,
+                                                  const text_data_position_const_iterator<TextData> & it):
+        base_type{it}, mdl_{&mdl} {}
+
+    /// Constructs iterator with specified reference to text model and text position
+    explicit text_data_characters_const_iterator(const TextData & mdl, const position & pos):
+        text_data_characters_const_iterator{mdl, positions_iterator_at(mdl, pos)} {}
+
+    /// Returns position of character which this iterator points to
+    position pos() const {
+        return *this->base();
+    }
+
+    /// Dereferences iterator
+    typename TextData::char_t dereference() const {
+        assert(mdl_ != nullptr && "dereference of invalid iterator");
+        assert(this->base() != positions_end(*mdl_) && "can't get character at the end position");
+
+        // checking for the end of line
+        if (this->base()->column == mdl_->line_size(this->base()->line)) {
+            return static_cast<typename TextData::char_t>('\n');
+        }
+
+        return mdl_->char_at(*this->base());
+    }
+
+private:
+    const TextData * mdl_ = nullptr;       ///< Pointer to text model
+};
+
+
+/// Returns const characters iterator pointing to the beginning of text
+auto characters_begin(const text_data auto & mdl) {
+    return text_data_characters_const_iterator{mdl, begin_pos(mdl)};
+}
+
+
+/// Returns const characters iterator pointing to the end of text
+auto characters_end(const text_data auto & mdl) {
+    return text_data_characters_const_iterator{mdl, end_pos(mdl)};
+}
+
+
+/// Returns const characters iterator for specified positions iterator
+template <text_data TextData>
+auto characters_iterator_at(const TextData & mdl, const text_data_position_const_iterator<TextData> & it) {
+    return text_data_characters_const_iterator{mdl, it};
+}
+
+
+/// Returns const characters iterator pointing to specified position
+auto characters_iterator_at(const text_data auto & mdl, const position & pos) {
+    assert(pos_is_valid(mdl, pos) && "invalid position in text");
+    return text_data_characters_const_iterator{mdl, pos};
+}
+
+
+/// Returns range containing characters from specified text range
+auto characters(const text_data auto & mdl, const range & r) {
+    return std::ranges::subrange(characters_iterator_at(mdl, r.start),
+                                 characters_iterator_at(mdl, r.end));
+}
+
+
+/// Returns range containing characters of whole model
+auto characters(const text_data auto & mdl) {
+    return characters(mdl, {begin_pos(mdl), end_pos(mdl)});
+}
+
+
+/// Returns string containing characters from specified range
+template <text_data TextData>
+requires std_character<typename TextData::char_t>
+auto characters_str(const TextData & mdl, const range & r) {
+    auto chars = characters(mdl, r);
+    return text_data_string<TextData>{std::ranges::begin(chars), std::ranges::end(chars)};
+}
+
+
+/// Returns string containing text of whole model
+template <text_data TextData>
+requires std_character<typename TextData::char_t>
+auto characters_str(const TextData & mdl) {
+    auto chars = characters(mdl);
+    return text_data_string<TextData>{std::ranges::begin(chars), std::ranges::end(chars)};
+}
+
+
+/// Returns vector containing characters from specified range
+template <text_data TextData>
+auto characters_vector(const TextData & mdl, const range & r) {
+    auto chars = characters(mdl, r) | std::ranges::views::common;
+    return std::vector<typename TextData::char_t>{chars.begin(), chars.end()};
+}
+
+
+/// Returns vector containing text of whole model
+template <text_data TextData>
+auto characters_vector(const TextData & mdl) {
+    auto chars = characters(mdl) | std::ranges::views::common;
+    return std::vector<typename TextData::char_t>{chars.begin(), chars.end()};
+}
+
+
+/// Returns character pointed by specified character iterator
+template <text_data TextData>
+auto character_at(const TextData & mdl, const text_data_position_const_iterator<TextData> & it) {
+    return mdl.char_at(*it);
+}
+
+
+/// Returns string containing text of whole model (same as characters_str())
+auto string(const text_data auto & mdl) {
+    return characters_str(mdl);
+}
+
+
+/// Returns range containing all characters of specified line
+template <text_data TextData>
+class text_data_line_characters_view {
+public:
+    using char_t = typename TextData::char_t;
+
+    /// Constructs view for specified model and line
+    text_data_line_characters_view(const TextData & mdl, uint64_t line_idx):
+        mdl_{&mdl}, line_idx_{line_idx} {}
+
+    /// Returns number of characters in line
+    size_t size() const {
+        return mdl_->line_size(line_idx_);
+    }
+
+    /// Returns true if line is empty
+    bool empty() const {
+        return size() == 0;
+    }
+
+    /// Returns character at specified index
+    char_t operator[](size_t idx) const {
+        assert(idx < size() && "invalid character index");
+        return mdl_->char_at({line_idx_, idx});
+    }
+
+    /// Random access iterator over line characters
+    class iterator {
+    public:
+        using iterator_category = std::random_access_iterator_tag;
+        using iterator_concept = std::random_access_iterator_tag;
+        using value_type = char_t;
+        using difference_type = std::ptrdiff_t;
+        using reference = value_type;
+        using pointer = void;
+
+        iterator() = default;
+        iterator(const TextData * mdl, uint64_t line_idx, size_t idx):
+            mdl_{mdl}, line_idx_{line_idx}, idx_{idx} {}
+
+        reference operator*() const {
+            return mdl_->char_at({line_idx_, idx_});
+        }
+
+        reference operator[](difference_type n) const {
+            return mdl_->char_at({line_idx_, idx_ + n});
+        }
+
+        iterator & operator++() { ++idx_; return *this; }
+        iterator & operator--() { --idx_; return *this; }
+        iterator operator++(int) { auto tmp = *this; ++(*this); return tmp; }
+        iterator operator--(int) { auto tmp = *this; --(*this); return tmp; }
+
+        iterator & operator+=(difference_type n) { idx_ += n; return *this; }
+        iterator & operator-=(difference_type n) { idx_ -= n; return *this; }
+
+        friend iterator operator+(iterator it, difference_type n) { it += n; return it; }
+        friend iterator operator+(difference_type n, iterator it) { it += n; return it; }
+        friend iterator operator-(iterator it, difference_type n) { it -= n; return it; }
+        friend difference_type operator-(const iterator & a, const iterator & b) {
+            return static_cast<difference_type>(a.idx_) - static_cast<difference_type>(b.idx_);
+        }
+
+        friend bool operator==(const iterator & a, const iterator & b) {
+            return a.idx_ == b.idx_ && a.mdl_ == b.mdl_ && a.line_idx_ == b.line_idx_;
+        }
+        friend bool operator!=(const iterator & a, const iterator & b) { return !(a == b); }
+        friend bool operator<(const iterator & a, const iterator & b) { return a.idx_ < b.idx_; }
+        friend bool operator>(const iterator & a, const iterator & b) { return b < a; }
+        friend bool operator<=(const iterator & a, const iterator & b) { return !(b < a); }
+        friend bool operator>=(const iterator & a, const iterator & b) { return !(a < b); }
+
+    private:
+        const TextData * mdl_ = nullptr;
+        uint64_t line_idx_ = 0;
+        size_t idx_ = 0;
+    };
+
+    /// Returns iterator to the beginning
+    iterator begin() const { return iterator{mdl_, line_idx_, 0}; }
+    /// Returns iterator to the end
+    iterator end() const { return iterator{mdl_, line_idx_, size()}; }
+
+private:
+    const TextData * mdl_ = nullptr;
+    uint64_t line_idx_ = 0;
+};
+
+/// Returns range containing all characters of specified line
+template <text_data TextData>
+auto line_characters(const TextData & mdl, uint64_t line_idx) {
+    assert(line_idx < mdl.lines_size() && "invalid line number");
+    return text_data_line_characters_view<TextData>{mdl, line_idx};
+}
+
+/// Returns vector containing all characters of specified line
+template <text_data TextData>
+auto line_chars_vector(const TextData & mdl, uint64_t line_idx) {
+    auto chars = line_characters(mdl, line_idx) | std::ranges::views::common;
+    return std::vector<typename TextData::char_t>{chars.begin(), chars.end()};
+}
+
+
+/// Returns string containing all characters of specified line
+template <text_data TextData>
+requires std_character<typename TextData::char_t>
+auto line_str(const TextData & mdl, uint64_t line_idx) {
+    auto chars = line_characters(mdl, line_idx);
+    return text_data_string<TextData>{std::ranges::begin(chars), std::ranges::end(chars)};
+}
+
+
+/// Returns range containing all lines represented as strings
+auto lines(const text_data auto & mdl) {
+    auto line_numbers = std::ranges::iota_view<uint64_t, uint64_t>{uint64_t{0}, mdl.lines_size()};
+    auto fn = [&mdl](uint64_t line_idx) {
+        return line_str(mdl, line_idx);
+    };
+    return line_numbers | std::ranges::views::transform(fn);
+}
+
+
+/// Returns true if character at specified position is space
+template <text_data TextData>
+bool char_is_space_at(const TextData & mdl, const position & pos) {
+    auto ch = mdl.char_at(pos);
+    auto value = [&] {
+        if constexpr (text_character<decltype(ch)> && !std_character<decltype(ch)>) {
+            return ch.character();
+        } else {
+            return ch;
+        }
+    }();
+
+    if constexpr (std::is_same_v<decltype(value), wchar_t>) {
+        return std::iswspace(value);
+    } else if constexpr (std::is_same_v<decltype(value), char>) {
+        return std::isspace(static_cast<unsigned char>(value));
+    } else {
+        // for now, cast all other character types to char. This should
+        // work in most cases even for multibyte unicode string.
+        return std::isspace(static_cast<unsigned char>(static_cast<char>(value)));
+    }
+}
+
+
+/// Returns true if character at specified position is alphanumeric
+template <text_data TextData>
+bool char_is_alnum_at(const TextData & mdl, const position & pos) {
+    auto ch = mdl.char_at(pos);
+    auto value = [&] {
+        if constexpr (text_character<decltype(ch)> && !std_character<decltype(ch)>) {
+            return ch.character();
+        } else {
+            return ch;
+        }
+    }();
+
+    using value_t = decltype(value);
+
+    // we need convert several bytes in multibyte string to single code point
+    // to check character traits for multibyte encodings
+    static_assert(std::is_same_v<value_t, wchar_t> || std::is_same_v<value_t, char>,
+                    "checking for alphanumeric is not supported for multibyte encodings");
+
+    if constexpr (std::is_same_v<value_t, wchar_t>) {
+        return std::iswalnum(value);
+    } else if constexpr (std::is_same_v<value_t, char>) {
+        return std::isalnum(static_cast<unsigned char>(value));
+    }
+}
+
+
+}

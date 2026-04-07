@@ -12,6 +12,7 @@
 #include "characters_range.hpp"
 #include "editable_text_model.hpp"
 #include "signals.hpp"
+#include "simple_text_data.hpp"
 #include "std_character.hpp"
 #include "text_model_signals.hpp"
 #include "impl/utils.hpp"
@@ -43,20 +44,17 @@ public:
 
     /// Returns number of lines in model
     uint64_t lines_size() const {
-        return lines_.size();
+        return data_.lines_size();
     }
 
     /// Returns length of line at specified index
     uint64_t line_size(uint64_t line_idx) const {
-        assert(line_idx < lines_size() && "invalid line index");
-        return lines_[line_idx]->size();
+        return data_.line_size(line_idx);
     }
 
     /// Returns character at specified position
     Char char_at(const position & pos) const {
-        assert(pos.line < lines_size() && "invalid line index");
-        assert(pos.column < lines_[pos.line]->size() && "invalid column index");
-        return lines_[pos.line]->at(pos.column);
+        return data_.char_at(pos);
     }
 
 
@@ -92,9 +90,7 @@ public:
     }
 
 private:
-    using line_t = std::vector<Char>;
-    using lines_vector = std::vector<std::shared_ptr<line_t>>;
-    lines_vector lines_;           ///< Vector of lines of text
+    basic_simple_text_data<Char> data_;
 };
 
 

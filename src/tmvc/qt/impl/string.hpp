@@ -60,7 +60,7 @@ template <typename CharsRange>
 QString chars_to_qstring(CharsRange && chars) {
     using value_t = std::ranges::range_value_t<CharsRange>;
 
-    if constexpr (text_model_character<value_t> && !std_character<value_t>) {
+    if constexpr (text_character<value_t> && !std_character<value_t>) {
         using char_t = decltype(std::declval<value_t>().character());
         std::basic_string<char_t> str;
         if constexpr (requires { std::ranges::size(chars); }) {
@@ -90,7 +90,7 @@ auto qstring_to_chars(const QString & str) {
         return qstring_to_std_string<char16_t>(str);
     } else if constexpr (std::same_as<Char, char32_t>) {
         return qstring_to_std_string<char32_t>(str);
-    } else if constexpr (text_model_character<Char> && !std_character<Char>) {
+    } else if constexpr (text_character<Char> && !std_character<Char>) {
         using value_t = decltype(std::declval<Char>().character());
         auto plain = qstring_to_std_string<value_t>(str);
         std::vector<Char> out;

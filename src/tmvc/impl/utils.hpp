@@ -25,7 +25,7 @@ struct char_value_type {
     using type = Char;
 };
 
-template <text_model_character Char>
+template <text_character Char>
 requires (!std_character<Char>)
 struct char_value_type<Char> {
     using type = decltype(std::declval<Char>().character());

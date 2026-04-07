@@ -11,7 +11,7 @@
 namespace tmvc {
 
 
-template <text_model_character Char>
+template <text_character Char>
 constexpr auto char_code(const Char & c) {
     if constexpr (std_character<Char>) {
         return c;

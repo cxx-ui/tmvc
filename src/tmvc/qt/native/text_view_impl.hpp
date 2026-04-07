@@ -201,7 +201,7 @@ private:
         this->setReadOnly(is_const);
 
         // setting text in view
-        if constexpr (text_model_character<typename Model::char_t> &&
+        if constexpr (text_character<typename Model::char_t> &&
                       !std_character<typename Model::char_t>) {
             this->setPlainText(QString{});
             auto cursor = this->textCursor();
@@ -260,7 +260,7 @@ private:
 
         is_updating_view_ = true;
         auto cursor = impl::get_qt_cursor_for_selection(this, r.start, r.start);
-        if constexpr (text_model_character<typename Model::char_t> &&
+        if constexpr (text_character<typename Model::char_t> &&
                       !std_character<typename Model::char_t>) {
             auto chars = characters_vector(text_, r);
             impl::insert_formatted_chars(cursor, chars);
@@ -293,7 +293,7 @@ private:
 
         is_updating_view_ = true;
         auto cursor = impl::get_qt_cursor_for_selection(this, r.start, r.end);
-        if constexpr (text_model_character<typename Model::char_t> &&
+        if constexpr (text_character<typename Model::char_t> &&
                       !std_character<typename Model::char_t>) {
             auto chars = characters_vector(text_, r);
             impl::insert_formatted_chars(cursor, chars);
@@ -325,7 +325,7 @@ private:
 
         // inserting characters
         if (inserted != 0) {
-            if constexpr (text_model_character<typename Model::char_t> &&
+            if constexpr (text_character<typename Model::char_t> &&
                           !std_character<typename Model::char_t>) {
                 QTextCursor cursor(this->document());
                 cursor.setPosition(pos);
