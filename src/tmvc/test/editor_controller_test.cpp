@@ -966,6 +966,46 @@ BOOST_AUTO_TEST_CASE(do_delete_undo_redo) {
     BOOST_CHECK_EQUAL(n_can_redo_changed, 2);
 }
 
+/// Tests that undo of grouped transaction restores original text.
+BOOST_AUTO_TEST_CASE(transaction_group_undo_reverts_in_reverse_order) {
+    controller.set_text(L"Hello world");
+    BOOST_CHECK(!controller.can_undo());
+
+    {
+        transaction trans{text, history};
+        trans.erase_characters({{0, 6}, {0, 11}});
+        trans.insert_characters({0, 6}, std::wstring{L"planet!"});
+    }
+
+    BOOST_CHECK(string(text) == L"Hello planet!");
+    BOOST_CHECK(controller.can_undo());
+
+    controller.undo();
+    BOOST_CHECK(string(text) == L"Hello world");
+}
+
+/// Tests that redo of grouped transaction reapplies grouped changes.
+BOOST_AUTO_TEST_CASE(transaction_group_redo_reapplies_change) {
+    controller.set_text(L"Hello world");
+    BOOST_CHECK(!controller.can_undo());
+
+    {
+        transaction trans{text, history};
+        trans.erase_characters({{0, 6}, {0, 11}});
+        trans.insert_characters({0, 6}, std::wstring{L"planet!"});
+    }
+
+    BOOST_CHECK(string(text) == L"Hello planet!");
+    BOOST_CHECK(controller.can_undo());
+
+    controller.undo();
+    BOOST_CHECK(string(text) == L"Hello world");
+    BOOST_CHECK(controller.can_redo());
+
+    controller.redo();
+    BOOST_CHECK(string(text) == L"Hello planet!");
+}
+
 
 /// Tests removing spaces from line containing only spaces in before_save
 BOOST_AUTO_TEST_CASE(remove_spaces_before_save) {

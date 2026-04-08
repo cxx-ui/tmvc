@@ -168,8 +168,9 @@ void std_edit_controller<Derived, TextModel>::perform_undo(const modification<ch
         derived_set_pos_keep_anchor(replace_mod->modification_range().end);
         paste(replace_mod->new_chars());
     } else if (auto group_mod = dynamic_cast<const modification_group<char_t>*>(&mod)) {
-        for (auto && mod : group_mod->modifications()) {
-            perform_undo(*mod);
+        auto mods = group_mod->modifications() | std::views::common;
+        for (auto && group_item : mods | std::views::reverse) {
+            perform_undo(*group_item);
         }
     } else {
         assert(false && "unknown modification type");
@@ -186,7 +187,7 @@ void std_edit_controller<Derived, TextModel>::perform_redo(const modification<ch
     if (auto insert_mod = dynamic_cast<const insert_modification<char_t>*>(&mod)) {
         derived_set_pos_move_anchor(insert_mod->modification_range().start);
         paste(insert_mod->chars());
-    } else if (auto erase_mod = dynamic_cast<const erase_modification<char_t>*>(&mod)) {\
+    } else if (auto erase_mod = dynamic_cast<const erase_modification<char_t>*>(&mod)) {
         derived_set_pos_move_anchor(erase_mod->modification_range().start);
         derived_set_pos_keep_anchor(erase_mod->modification_range().end);
         delete_();
@@ -195,8 +196,8 @@ void std_edit_controller<Derived, TextModel>::perform_redo(const modification<ch
         derived_set_pos_keep_anchor(replace_mod->modification_range().end);
         paste(replace_mod->old_chars());
     } else if (auto group_mod = dynamic_cast<const modification_group<char_t>*>(&mod)) {
-        for (auto && mod : group_mod->modifications()) {
-            perform_undo(*mod);
+        for (auto && group_item : group_mod->modifications()) {
+            perform_redo(*group_item);
         }
     } else {
         assert(false && "unknown modification type");
