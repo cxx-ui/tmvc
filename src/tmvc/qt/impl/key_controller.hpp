@@ -48,11 +48,11 @@ bool process_selection_key_event(Controller & controller,
 
     switch (event->key()) {
     case Qt::Key_Left:
-        controller.do_left(ctrl, shift);
+        controller.do_left(ctrl, shift, pos);
         event->accept();
         return true;
     case Qt::Key_Right:
-        controller.do_right(ctrl, shift);
+        controller.do_right(ctrl, shift, pos);
         event->accept();
         return true;
     case Qt::Key_Up:

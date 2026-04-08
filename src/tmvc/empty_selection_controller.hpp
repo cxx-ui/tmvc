@@ -43,8 +43,8 @@ public:
     static void do_mouse_release(const position &, bool, bool) {}
     static void do_mouse_move(const position &, bool, bool) {}
 
-    static void do_left(bool, bool) {}
-    static void do_right(bool, bool) {}
+    static void do_left(bool, bool, const std::optional<position> & = std::nullopt) {}
+    static void do_right(bool, bool, const std::optional<position> & = std::nullopt) {}
     static void do_up(bool, bool, const std::optional<position> & = std::nullopt) {}
     static void do_down(bool, bool, const std::optional<position> & = std::nullopt) {}
     static void do_home(bool, bool) {}

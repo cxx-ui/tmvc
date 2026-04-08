@@ -168,7 +168,18 @@ public:
     // Key user actions
 
     /// Performs actions when user presses left button
-    void do_left(bool ctrl, bool shift) {
+    void do_left(bool ctrl,
+                 bool shift,
+                 const std::optional<position> & suggested_pos = std::nullopt) {
+        if (suggested_pos) {
+            if (shift) {
+                set_pos_keep_anchor(*suggested_pos);
+            } else {
+                set_pos_move_anchor(*suggested_pos);
+            }
+            return;
+        }
+
         if (ctrl) {
             move_prev_word(shift);
             return;
@@ -184,7 +195,18 @@ public:
 
 
     /// Performs actions when user presses right button
-    void do_right(bool ctrl, bool shift) {
+    void do_right(bool ctrl,
+                  bool shift,
+                  const std::optional<position> & suggested_pos = std::nullopt) {
+        if (suggested_pos) {
+            if (shift) {
+                set_pos_keep_anchor(*suggested_pos);
+            } else {
+                set_pos_move_anchor(*suggested_pos);
+            }
+            return;
+        }
+
         if (ctrl) {
             move_next_word(shift);
             return;

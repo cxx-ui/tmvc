@@ -38,10 +38,10 @@ concept selection_controller = requires(Controller & cntrl, const position & p) 
     // Key button actions
 
     // Performs actions when user presses left button
-    cntrl.do_left(true, false);
+    cntrl.do_left(true, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses right button
-    cntrl.do_right(true, false);
+    cntrl.do_right(true, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses up button
     cntrl.do_up(true, false, std::declval<std::optional<position>>());

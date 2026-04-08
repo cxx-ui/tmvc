@@ -21,6 +21,7 @@
 #include <optional>
 #include <QApplication>
 #include <QFontMetrics>
+#include <QKeySequence>
 #include <QPlainTextEdit>
 #include <QTextEdit>
 
@@ -176,6 +177,17 @@ protected:
         return impl::get_position_from_cursor(target_cursor);
     }
 
+    /// Calculates suggested text position for start/end of current visual line
+    std::optional<position> suggested_left_right_pos(bool is_left) const {
+        if (this->lineWrapMode() == QtTextEdit::NoWrap) {
+            return std::nullopt;
+        }
+
+        auto cursor = this->textCursor();
+        cursor.movePosition(is_left ? QTextCursor::StartOfLine : QTextCursor::EndOfLine);
+        return impl::get_position_from_cursor(cursor);
+    }
+
     /// Handles key press event in text view
     void keyPressEvent(QKeyEvent * event) override {
         if constexpr (!qt_std_controller<Controller>) {
@@ -189,6 +201,14 @@ protected:
                 pos = suggested_page_up_down_pos(true);
             } else if (event->key() == Qt::Key_PageDown) {
                 pos = suggested_page_up_down_pos(false);
+            } else if (event->key() == Qt::Key_Left &&
+                       (event->matches(QKeySequence::MoveToStartOfLine) ||
+                        event->matches(QKeySequence::SelectStartOfLine))) {
+                pos = suggested_left_right_pos(true);
+            } else if (event->key() == Qt::Key_Right &&
+                       (event->matches(QKeySequence::MoveToEndOfLine) ||
+                        event->matches(QKeySequence::SelectEndOfLine))) {
+                pos = suggested_left_right_pos(false);
             } else {
                 reset_up_down_saved_x();
             }
