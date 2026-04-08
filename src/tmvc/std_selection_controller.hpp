@@ -16,6 +16,7 @@
 #include "std_paging_controller.hpp"
 #include "text_model.hpp"
 #include "impl/utils.hpp"
+#include <optional>
 
 
 namespace tmvc {
@@ -199,7 +200,27 @@ public:
 
 
     /// Performs actions when user presses up button
-    void do_up(bool ctrl, bool shift) {
+    void do_up(bool,
+               bool shift,
+               const std::optional<position> & suggested_pos = std::nullopt) {
+        if (suggested_pos) {
+            auto new_pos = *suggested_pos;
+            if (new_pos.line >= text_mdl_.lines_size()) {
+                new_pos.line = text_mdl_.lines_size() - 1;
+            }
+            auto line_sz = text_mdl_.line_size(new_pos.line);
+            if (new_pos.column > line_sz) {
+                new_pos.column = line_sz;
+            }
+
+            if (shift) {
+                select_text(derived_anchor_pos(), new_pos, false);
+            } else {
+                select_text(new_pos, new_pos, false);
+            }
+            return;
+        }
+
         if (derived_pos().line == 0) {
             // first line
             return;
@@ -233,7 +254,27 @@ public:
 
 
     /// Performs actions when user presses down button
-    void do_down(bool ctrl, bool shift) {
+    void do_down(bool,
+                 bool shift,
+                 const std::optional<position> & suggested_pos = std::nullopt) {
+        if (suggested_pos) {
+            auto new_pos = *suggested_pos;
+            if (new_pos.line >= text_mdl_.lines_size()) {
+                new_pos.line = text_mdl_.lines_size() - 1;
+            }
+            auto line_sz = text_mdl_.line_size(new_pos.line);
+            if (new_pos.column > line_sz) {
+                new_pos.column = line_sz;
+            }
+
+            if (shift) {
+                select_text(derived_anchor_pos(), new_pos, false);
+            } else {
+                select_text(new_pos, new_pos, false);
+            }
+            return;
+        }
+
         if (derived_pos().line == text_mdl_.lines_size() - 1) {
             // last line
             return;
@@ -385,10 +426,9 @@ public:
     }
 
     /// Selects token at specified text position
-    void select_word(const position & pos, bool ctrl, bool shift) {
-        (void)ctrl;
-        (void)shift;
-
+    void select_word(const position & pos,
+                     bool,
+                     bool) {
         auto line_sz = text_mdl_.line_size(pos.line);
         if (pos.column >= line_sz) {
             set_pos_move_anchor(pos);

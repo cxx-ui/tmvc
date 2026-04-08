@@ -10,6 +10,7 @@
 #pragma once
 
 #include "selection_controller.hpp"
+#include <optional>
 
 
 namespace tmvc {
@@ -44,8 +45,8 @@ public:
 
     static void do_left(bool, bool) {}
     static void do_right(bool, bool) {}
-    static void do_up(bool, bool) {}
-    static void do_down(bool, bool) {}
+    static void do_up(bool, bool, const std::optional<position> & = std::nullopt) {}
+    static void do_down(bool, bool, const std::optional<position> & = std::nullopt) {}
     static void do_home(bool, bool) {}
     static void do_end(bool, bool) {}
     static void do_page_up(bool, bool) {}

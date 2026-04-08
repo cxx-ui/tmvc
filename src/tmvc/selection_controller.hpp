@@ -12,6 +12,7 @@
 #include "context_menu.hpp"
 #include "position.hpp"
 #include "text_model.hpp"
+#include <optional>
 
 
 namespace tmvc {
@@ -43,10 +44,10 @@ concept selection_controller = requires(Controller & cntrl, const position & p) 
     cntrl.do_right(true, false);
 
     // Performs actions when user presses up button
-    cntrl.do_up(true, false);
+    cntrl.do_up(true, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses down button
-    cntrl.do_down(true, false);
+    cntrl.do_down(true, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses home button
     cntrl.do_home(true, false);

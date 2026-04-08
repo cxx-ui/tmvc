@@ -18,7 +18,9 @@
 #include "../../edit_controller.hpp"
 #include "../../editable_text_model.hpp"
 #include "../../text_model.hpp"
+#include <optional>
 #include <QApplication>
+#include <QFontMetrics>
 #include <QPlainTextEdit>
 #include <QTextEdit>
 
@@ -126,11 +128,42 @@ public:
     }
 
 protected:
+    /// Calculates suggested text position for visual up/down movement
+    std::optional<position> suggested_up_down_pos(bool is_up) const {
+        if (this->lineWrapMode() == QtTextEdit::NoWrap) {
+            return std::nullopt;
+        }
+
+        auto cursor = this->textCursor();
+        auto rect = this->cursorRect(cursor);
+        auto line_h = QFontMetrics{this->font()}.lineSpacing();
+
+        QPoint target = rect.center();
+        if (!up_down_saved_x_) {
+            up_down_saved_x_ = target.x();
+        } else {
+            target.setX(*up_down_saved_x_);
+        }
+        target.setY(target.y() + (is_up ? -line_h : line_h));
+        auto target_cursor = this->cursorForPosition(target);
+        return impl::get_position_from_cursor(target_cursor);
+    }
+
     /// Handles key press event in text view
     void keyPressEvent(QKeyEvent * event) override {
         if constexpr (!qt_std_controller<Controller>) {
+            // detecting suggested move posigion for up and down keys
+            std::optional<position> pos = std::nullopt;
+            if (event->key() == Qt::Key_Up) {
+                pos = suggested_up_down_pos(true);
+            } else if (event->key() == Qt::Key_Down) {
+                pos = suggested_up_down_pos(false);
+            } else {
+                reset_up_down_saved_x();
+            }
+
             // passing key event to user defined controller
-            impl::process_edit_key_event(this->cntrl_, event);
+            impl::process_edit_key_event(this->cntrl_, event, pos);
         } else {
             // passing key event to Qt control
             QtTextEdit::keyPressEvent(event);
@@ -138,6 +171,8 @@ protected:
     }
 
     void inputMethodEvent(QInputMethodEvent * event) override {
+        reset_up_down_saved_x();
+
         if constexpr (!qt_std_controller<Controller> && edit_controller<Controller>) {
             if (!event->commitString().isEmpty()) {
                 auto chars = impl::qstring_to_chars<typename Controller::char_t>(
@@ -152,6 +187,8 @@ protected:
 
     /// Handles mouse press event
     void mousePressEvent(QMouseEvent * event) override {
+        reset_up_down_saved_x();
+
         if constexpr (selection_controller_with_mouse<Controller>) {
             if (event->button() != Qt::LeftButton) {
                 QtTextEdit::mousePressEvent(event);
@@ -194,6 +231,8 @@ protected:
 
     /// Handles mouse double click event
     void mouseDoubleClickEvent(QMouseEvent * event) override {
+        reset_up_down_saved_x();
+
         if constexpr (selection_controller_with_mouse<Controller>) {
             if (event->button() != Qt::LeftButton) {
                 QtTextEdit::mouseDoubleClickEvent(event);
@@ -235,6 +274,10 @@ protected:
     }
 
 private:
+    void reset_up_down_saved_x() const {
+        up_down_saved_x_.reset();
+    }
+
     /// Initializes text view
     void init() {
         // setting read only flag
@@ -418,6 +461,7 @@ private:
     model_t & text_;                        ///< Reference to text model
     bool ignore_model_changes_ = false;     ///< Should changes in model be ignored?
     bool is_updating_view_ = false;         ///< True if text view is being updated now
+    mutable std::optional<int> up_down_saved_x_; ///< Saved horizontal pixel position for up/down
 
     // connections to text model signals
     scoped_signal_connection after_inserted_con_;

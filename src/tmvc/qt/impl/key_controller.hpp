@@ -11,6 +11,7 @@
 
 #include "../../selection_controller.hpp"
 #include "string.hpp"
+#include <optional>
 #include <ranges>
 #include <QClipboard>
 #include <QGuiApplication>
@@ -23,7 +24,9 @@ namespace tmvc::qt::impl {
 /// Processes key event for selection controller. Returns true if event was processed
 /// and future processing is not required
 template <selection_controller Controller>
-bool process_selection_key_event(Controller & controller, QKeyEvent * event) {
+bool process_selection_key_event(Controller & controller,
+                                 QKeyEvent * event,
+                                 const std::optional<position> & pos = std::nullopt) {
     bool ctrl = (event->modifiers() & Qt::ControlModifier) != 0;
     bool shift = (event->modifiers() & Qt::ShiftModifier) != 0;
 
@@ -53,11 +56,11 @@ bool process_selection_key_event(Controller & controller, QKeyEvent * event) {
         event->accept();
         return true;
     case Qt::Key_Up:
-        controller.do_up(ctrl, shift);
+        controller.do_up(ctrl, shift, pos);
         event->accept();
         return true;
     case Qt::Key_Down:
-        controller.do_down(ctrl, shift);
+        controller.do_down(ctrl, shift, pos);
         event->accept();
         return true;
     case Qt::Key_Home:
@@ -86,7 +89,9 @@ bool process_selection_key_event(Controller & controller, QKeyEvent * event) {
 /// Processes key event for edit controller. Returns true if event was processed
 /// and future processing is not required
 template <edit_controller Controller>
-bool process_edit_key_event(Controller & controller, QKeyEvent * event) {
+bool process_edit_key_event(Controller & controller,
+                            QKeyEvent * event,
+                            const std::optional<position> & pos = std::nullopt) {
     using char_t = typename Controller::char_t;
 
     bool ctrl = (event->modifiers() & Qt::ControlModifier) != 0;
@@ -170,7 +175,7 @@ bool process_edit_key_event(Controller & controller, QKeyEvent * event) {
     }
 
     // delegating key handle to selection controller
-    return process_selection_key_event(controller, event);
+    return process_selection_key_event(controller, event, pos);
 }
 
 
