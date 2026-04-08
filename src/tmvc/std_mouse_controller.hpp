@@ -24,6 +24,9 @@ concept std_mouse_controller_derived = requires(Derived & derived) {
 
     /// Sets position with keeping selection anchor
     derived.set_pos_keep_anchor(std::declval<position>());
+
+    /// Selects word at specified position
+    derived.select_word(std::declval<position>(), true, false);
 };
 
 
@@ -38,6 +41,13 @@ public:
         static_assert(std_mouse_controller_derived<Derived>);
         is_mouse_pressed_ = true;
         static_cast<Derived*>(this)->set_pos_move_anchor(pos);
+    }
+
+    /// Processes mouse double click event at specified text position
+    void do_mouse_double_click(const position & pos, bool ctrl, bool shift) {
+        static_assert(std_mouse_controller_derived<Derived>);
+        is_mouse_pressed_ = true;
+        static_cast<Derived*>(this)->select_word(pos, ctrl, shift);
     }
 
 

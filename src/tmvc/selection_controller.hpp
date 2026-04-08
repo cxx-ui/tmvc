@@ -85,6 +85,9 @@ concept selection_controller_with_mouse = selection_controller<Controller> && re
     // Processes mouse press event at specified text position
     cntrl.do_mouse_press(std::declval<position>(), true, false);
 
+    // Processes mouse double click event at specified text position
+    cntrl.do_mouse_double_click(std::declval<position>(), true, false);
+
     // Processes mouse release event at specified text position
     cntrl.do_mouse_release(std::declval<position>(), true, false);
 

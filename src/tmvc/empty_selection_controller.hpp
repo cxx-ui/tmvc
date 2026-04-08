@@ -38,6 +38,7 @@ public:
     static void set_viewport_height(uint64_t) {}
 
     static void do_mouse_press(const position &, bool, bool) {}
+    static void do_mouse_double_click(const position &, bool, bool) {}
     static void do_mouse_release(const position &, bool, bool) {}
     static void do_mouse_move(const position &, bool, bool) {}
 

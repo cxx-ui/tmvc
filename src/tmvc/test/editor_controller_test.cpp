@@ -1006,7 +1006,6 @@ BOOST_AUTO_TEST_CASE(transaction_group_redo_reapplies_change) {
     BOOST_CHECK(string(text) == L"Hello planet!");
 }
 
-
 /// Tests removing spaces from line containing only spaces in before_save
 BOOST_AUTO_TEST_CASE(remove_spaces_before_save) {
     controller.set_text(L"\tline of text\n   \t   ");

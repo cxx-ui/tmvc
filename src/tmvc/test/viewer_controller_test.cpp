@@ -578,6 +578,39 @@ BOOST_AUTO_TEST_CASE(move_prev_word_prev_line) {
     BOOST_CHECK_EQUAL(selection.anchor_pos().column, 18);
 }
 
+/// Tests selecting alnum token by mouse double click
+BOOST_AUTO_TEST_CASE(mouse_double_click_selects_word) {
+    text.reset(L"first,  second!");
+
+    controller.do_mouse_double_click({0, 2}, false, false);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 5);
+}
+
+/// Tests selecting punctuation/space token by mouse double click
+BOOST_AUTO_TEST_CASE(mouse_double_click_selects_non_word_token) {
+    text.reset(L"first,  second!");
+
+    controller.do_mouse_double_click({0, 5}, false, false);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 5);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 6);
+
+    controller.do_mouse_double_click({0, 6}, false, false);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 6);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 8);
+
+    controller.do_mouse_double_click({0, 15}, false, false);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 15);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 15);
+}
 
 /// Tests selecting all text
 BOOST_AUTO_TEST_CASE(select_all) {

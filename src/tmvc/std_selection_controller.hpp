@@ -384,6 +384,48 @@ public:
         return menu;
     }
 
+    /// Selects token at specified text position
+    void select_word(const position & pos, bool ctrl, bool shift) {
+        (void)ctrl;
+        (void)shift;
+
+        auto line_sz = text_mdl_.line_size(pos.line);
+        if (pos.column >= line_sz) {
+            set_pos_move_anchor(pos);
+            return;
+        }
+
+        auto is_alnum = char_is_alnum_at(text_mdl_, pos);
+        auto is_space = char_is_space_at(text_mdl_, pos);
+
+        auto same_kind = [this, is_alnum, is_space](const position & p) {
+            if (is_alnum) {
+                return char_is_alnum_at(text_mdl_, p);
+            }
+            if (is_space) {
+                return char_is_space_at(text_mdl_, p);
+            }
+            return !char_is_alnum_at(text_mdl_, p) && !char_is_space_at(text_mdl_, p);
+        };
+
+        auto start = pos;
+        auto end = pos;
+
+        while (start.column > 0) {
+            position prev{start.line, start.column - 1};
+            if (!same_kind(prev)) {
+                break;
+            }
+            --start.column;
+        }
+
+        while (end.column < line_sz && same_kind(end)) {
+            ++end.column;
+        }
+
+        set_pos_move_anchor(start);
+        set_pos_keep_anchor(end);
+    }
 
 protected:
     /// Resets saved number of column when moving up/down

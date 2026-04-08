@@ -313,6 +313,29 @@ protected:
         is_mouse_pressed_ = false;
     }
 
+    void mouseDoubleClickEvent(QMouseEvent * event) override {
+        // ignoring all mouse buttons except the left button
+        if (event->button() != Qt::LeftButton) {
+            QAbstractScrollArea::mouseDoubleClickEvent(event);
+            return;
+        }
+
+        // keep pressed state to allow extending selection by dragging after double click
+        is_mouse_pressed_ = true;
+        last_mouse_move_pos_ = event->position();
+
+        auto text_pos = viewport_mdl_.text_pos(event->position().x(),
+                                            event->position().y(),
+                                            is_overwrite_mode());
+        auto modifiers = QApplication::keyboardModifiers();
+        controller_.do_mouse_double_click(text_pos,
+                                        modifiers & Qt::ControlModifier,
+                                        modifiers & Qt::ShiftModifier);
+
+        reset_cursor_visibility();
+        event->accept();
+    }
+
 
     void keyPressEvent(QKeyEvent * event) override {
         bool event_processed = false;

@@ -173,6 +173,27 @@ protected:
         }
     }
 
+    /// Handles mouse double click event
+    void mouseDoubleClickEvent(QMouseEvent * event) override {
+        if constexpr (selection_controller_with_mouse<Controller>) {
+            if (event->button() != Qt::LeftButton) {
+                QtTextEdit::mouseDoubleClickEvent(event);
+                return;
+            }
+
+            auto cursor = this->cursorForPosition(event->pos());
+            auto pos = impl::get_position_from_cursor(cursor);
+            auto modifiers = QApplication::keyboardModifiers();
+            this->cntrl_.do_mouse_double_click(pos,
+                                               modifiers & Qt::ControlModifier,
+                                               modifiers & Qt::ShiftModifier);
+            event->accept();
+        } else {
+            // passing mouse event to Qt control
+            QtTextEdit::mouseDoubleClickEvent(event);
+        }
+    }
+
     /// Handles mouse move event
     void mouseMoveEvent(QMouseEvent * event) override {
         if constexpr (selection_controller_with_mouse<Controller>) {
