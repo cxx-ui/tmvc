@@ -131,6 +131,21 @@ protected:
         }
     }
 
+    void inputMethodEvent(QInputMethodEvent * event) override {
+        if constexpr (!qt_std_controller<Controller> && edit_controller<Controller>) {
+            if (!event->commitString().isEmpty()) {
+                auto chars = impl::qstring_to_chars<typename Controller::char_t>(
+                    event->commitString());
+                for (auto && ch : chars) {
+                    this->cntrl_.do_char(ch);
+                }
+                event->accept();
+                return;
+            }
+        }
+        QtTextEdit::inputMethodEvent(event);
+    }
+
     /// Handles mouse press event
     void mousePressEvent(QMouseEvent * event) override {
         if constexpr (selection_controller_with_mouse<Controller>) {
