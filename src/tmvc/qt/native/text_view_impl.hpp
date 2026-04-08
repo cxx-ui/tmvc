@@ -142,9 +142,7 @@ protected:
             if (!event->commitString().isEmpty()) {
                 auto chars = impl::qstring_to_chars<typename Controller::char_t>(
                     event->commitString());
-                for (auto && ch : chars) {
-                    this->cntrl_.do_char(ch);
-                }
+                this->cntrl_.paste(chars);
                 event->accept();
                 return;
             }
