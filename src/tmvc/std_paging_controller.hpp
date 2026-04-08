@@ -48,6 +48,7 @@ public:
     // Performs actions when user presses page up button
     void do_page_up(bool,
                     bool shift,
+                    bool,
                     const std::optional<position> & pos = std::nullopt) {
         static_assert(std_paging_controller_derived<Derived>);
         auto * d = static_cast<Derived*>(this);
@@ -66,6 +67,7 @@ public:
     // Performs actions when user presses page down button
     void do_page_down(bool,
                       bool shift,
+                      bool,
                       const std::optional<position> & pos = std::nullopt) {
         static_assert(std_paging_controller_derived<Derived>);
         auto * d = static_cast<Derived*>(this);

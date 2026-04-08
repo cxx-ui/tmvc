@@ -43,14 +43,14 @@ public:
     static void do_mouse_release(const position &, bool, bool) {}
     static void do_mouse_move(const position &, bool, bool) {}
 
-    static void do_left(bool, bool, const std::optional<position> & = std::nullopt) {}
-    static void do_right(bool, bool, const std::optional<position> & = std::nullopt) {}
-    static void do_up(bool, bool, const std::optional<position> & = std::nullopt) {}
-    static void do_down(bool, bool, const std::optional<position> & = std::nullopt) {}
-    static void do_home(bool, bool) {}
-    static void do_end(bool, bool) {}
-    static void do_page_up(bool, bool, const std::optional<position> & = std::nullopt) {}
-    static void do_page_down(bool, bool, const std::optional<position> & = std::nullopt) {}
+    static void do_left(bool, bool, bool, const std::optional<position> & = std::nullopt) {}
+    static void do_right(bool, bool, bool, const std::optional<position> & = std::nullopt) {}
+    static void do_up(bool, bool, bool, const std::optional<position> & = std::nullopt) {}
+    static void do_down(bool, bool, bool, const std::optional<position> & = std::nullopt) {}
+    static void do_home(bool, bool, bool) {}
+    static void do_end(bool, bool, bool) {}
+    static void do_page_up(bool, bool, bool, const std::optional<position> & = std::nullopt) {}
+    static void do_page_down(bool, bool, bool, const std::optional<position> & = std::nullopt) {}
 
     static bool can_copy() { return false; }
     static std::vector<char_t> copy() { assert(false && "should never be called"); return {}; }

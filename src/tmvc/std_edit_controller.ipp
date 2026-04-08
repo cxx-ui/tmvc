@@ -237,7 +237,7 @@ void std_edit_controller<Derived, TextModel>::clear() {
 
 
 template <typename Derived, editable_text_model TextModel>
-void std_edit_controller<Derived, TextModel>::do_delete(bool ctrl, bool shift) {
+void std_edit_controller<Derived, TextModel>::do_delete(bool ctrl, bool shift, bool alt) {
     auto sel = selected_range();
     if (sel.start == sel.end) {
         // deleting single character
@@ -253,7 +253,7 @@ void std_edit_controller<Derived, TextModel>::do_delete(bool ctrl, bool shift) {
 
 
 template <typename Derived, editable_text_model TextModel>
-void std_edit_controller<Derived, TextModel>::do_backspace(bool ctrl, bool shift) {
+void std_edit_controller<Derived, TextModel>::do_backspace(bool ctrl, bool shift, bool alt) {
     auto sel = selected_range();
     if (sel.start == sel.end) {
         // backspacing single character
@@ -269,7 +269,7 @@ void std_edit_controller<Derived, TextModel>::do_backspace(bool ctrl, bool shift
 
 
 template <typename Derived, editable_text_model TextModel>
-void std_edit_controller<Derived, TextModel>::do_enter(bool ctrl, bool shift) {
+void std_edit_controller<Derived, TextModel>::do_enter(bool ctrl, bool shift, bool alt) {
     // removing all characters from current line if it contains only spaces
     remove_all_spaces_current_line();
 
@@ -339,7 +339,7 @@ void std_edit_controller<Derived, TextModel>::do_enter(bool ctrl, bool shift) {
 
 
 template <typename Derived, editable_text_model TextModel>
-void std_edit_controller<Derived, TextModel>::do_tab(bool ctrl, bool shift) {
+void std_edit_controller<Derived, TextModel>::do_tab(bool ctrl, bool shift, bool alt) {
     transaction trans{text_mdl_, history()};
 
     // checking if we need add or remove indent
@@ -522,7 +522,7 @@ void std_edit_controller<Derived, TextModel>::do_tab(bool ctrl, bool shift) {
 
 
 template <typename Derived, editable_text_model TextModel>
-void std_edit_controller<Derived, TextModel>::do_insert(bool ctrl, bool shift) {
+void std_edit_controller<Derived, TextModel>::do_insert(bool ctrl, bool shift, bool alt) {
     if (ctrl || shift) {
         return;
     }
@@ -582,7 +582,7 @@ bool std_edit_controller<Derived, TextModel>::can_cut() const {
 template <typename Derived, editable_text_model TextModel>
 auto std_edit_controller<Derived, TextModel>::cut() -> std::vector<char_t> {
     auto res = this->copy();
-    do_delete(false, false);
+    do_delete(false, false, false);
     return res;
 }
 
@@ -602,7 +602,7 @@ bool std_edit_controller<Derived, TextModel>::can_delete() const {
 
 template <typename Derived, editable_text_model TextModel>
 void std_edit_controller<Derived, TextModel>::delete_() {
-    do_delete(false, false);
+    do_delete(false, false, false);
 }
 
 

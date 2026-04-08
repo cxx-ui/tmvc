@@ -38,28 +38,28 @@ concept selection_controller = requires(Controller & cntrl, const position & p) 
     // Key button actions
 
     // Performs actions when user presses left button
-    cntrl.do_left(true, false, std::declval<std::optional<position>>());
+    cntrl.do_left(true, false, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses right button
-    cntrl.do_right(true, false, std::declval<std::optional<position>>());
+    cntrl.do_right(true, false, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses up button
-    cntrl.do_up(true, false, std::declval<std::optional<position>>());
+    cntrl.do_up(true, false, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses down button
-    cntrl.do_down(true, false, std::declval<std::optional<position>>());
+    cntrl.do_down(true, false, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses home button
-    cntrl.do_home(true, false);
+    cntrl.do_home(true, false, false);
 
     // Performs actions when user presses end button
-    cntrl.do_end(true, false);
+    cntrl.do_end(true, false, false);
 
     // Performs actions when user presses page up button
-    cntrl.do_page_up(true, false, std::declval<std::optional<position>>());
+    cntrl.do_page_up(true, false, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses page down button
-    cntrl.do_page_down(true, false, std::declval<std::optional<position>>());
+    cntrl.do_page_down(true, false, false, std::declval<std::optional<position>>());
 
 
     ////////////////////////////////////////////////////////////
@@ -111,10 +111,10 @@ concept selection_controller_with_paging = selection_controller<Controller> && r
     cntrl.set_viewport_height(std::declval<uint64_t>());
 
     // Performs actions when user presses page up button
-    cntrl.do_page_up(true, false, std::declval<std::optional<position>>());
+    cntrl.do_page_up(true, false, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses page down button
-    cntrl.do_page_down(true, false, std::declval<std::optional<position>>());
+    cntrl.do_page_down(true, false, false, std::declval<std::optional<position>>());
 };
 
 

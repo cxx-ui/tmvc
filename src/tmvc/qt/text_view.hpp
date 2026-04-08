@@ -352,18 +352,19 @@ protected:
 
         bool ctrl = (event->modifiers() & Qt::ControlModifier) != 0;
         bool shift = (event->modifiers() & Qt::ShiftModifier) != 0;
+        bool alt = (event->modifiers() & Qt::AltModifier) != 0;
 
         // processing page up / page down keys
         switch (event->key()) {
         case Qt::Key_PageUp:
             viewport_mdl_.do_page_up(shift);
-            controller_.do_page_up(ctrl, shift);
+            controller_.do_page_up(ctrl, shift, alt);
             reset_cursor_visibility();
             event->accept();
             return;
         case Qt::Key_PageDown:
             viewport_mdl_.do_page_down(shift);
-            controller_.do_page_down(ctrl, shift);
+            controller_.do_page_down(ctrl, shift, alt);
             reset_cursor_visibility();
             event->accept();
             return;

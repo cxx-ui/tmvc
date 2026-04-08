@@ -170,6 +170,7 @@ public:
     /// Performs actions when user presses left button
     void do_left(bool ctrl,
                  bool shift,
+                 bool alt,
                  const std::optional<position> & suggested_pos = std::nullopt) {
         if (suggested_pos) {
             if (shift) {
@@ -180,7 +181,11 @@ public:
             return;
         }
 
-        if (ctrl) {
+        bool move_word = ctrl;
+#if defined(__APPLE__)
+        move_word = alt;
+#endif
+        if (move_word) {
             move_prev_word(shift);
             return;
         }
@@ -193,10 +198,10 @@ public:
         }
     }
 
-
     /// Performs actions when user presses right button
     void do_right(bool ctrl,
                   bool shift,
+                  bool alt,
                   const std::optional<position> & suggested_pos = std::nullopt) {
         if (suggested_pos) {
             if (shift) {
@@ -207,7 +212,11 @@ public:
             return;
         }
 
-        if (ctrl) {
+        bool move_word = ctrl;
+#if defined(__APPLE__)
+        move_word = alt;
+#endif
+        if (move_word) {
             move_next_word(shift);
             return;
         }
@@ -220,10 +229,10 @@ public:
         }
     }
 
-
     /// Performs actions when user presses up button
     void do_up(bool,
                bool shift,
+               bool,
                const std::optional<position> & suggested_pos = std::nullopt) {
         if (suggested_pos) {
             auto new_pos = *suggested_pos;
@@ -274,10 +283,10 @@ public:
         }
     }
 
-
     /// Performs actions when user presses down button
     void do_down(bool,
                  bool shift,
+                 bool,
                  const std::optional<position> & suggested_pos = std::nullopt) {
         if (suggested_pos) {
             auto new_pos = *suggested_pos;
@@ -328,9 +337,8 @@ public:
         }
     }
 
-
     /// Performs actions when user presses home button
-    void do_home(bool ctrl, bool shift) {
+    void do_home(bool ctrl, bool shift, bool) {
         position new_pos{derived_pos().line, 0};
         if (shift) {
             set_pos_keep_anchor(new_pos);
@@ -339,9 +347,8 @@ public:
         }
     }
 
-
     /// Performs actions when user presses end button
-    void do_end(bool ctrl, bool shift) {
+    void do_end(bool ctrl, bool shift, bool) {
         position new_pos{derived_pos().line, text_mdl_.line_size(derived_pos().line)};
         if (shift) {
             set_pos_keep_anchor(new_pos);

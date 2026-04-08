@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(insert_chars_selection) {
 BOOST_AUTO_TEST_CASE(do_delete_selection) {
     controller.set_text(make_formatted(L"first line\nsecond line"));
     controller.select_text({0, 4}, {1, 2});
-    controller.do_delete(false, false);
+    controller.do_delete(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"firscond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(do_delete_selection) {
 BOOST_AUTO_TEST_CASE(do_delete_no_selection) {
     controller.set_text(make_formatted(L"first line\nsecond line"));
     controller.select_text({0, 4}, {0, 4});
-    controller.do_delete(false, false);
+    controller.do_delete(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"firs line\nsecond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(do_delete_no_selection) {
 BOOST_AUTO_TEST_CASE(do_delete_doc_end) {
     controller.set_text(make_formatted(L"first line\nsecond line"));
     controller.select_text({1, 11}, {1, 11});
-    controller.do_delete(false, false);
+    controller.do_delete(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\nsecond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(do_delete_doc_end) {
 BOOST_AUTO_TEST_CASE(do_backspace_selection) {
     controller.set_text(make_formatted(L"first line\nsecond line"));
     controller.select_text({0, 4}, {1, 2});
-    controller.do_backspace(false, false);
+    controller.do_backspace(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"firscond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(do_backspace_selection) {
 BOOST_AUTO_TEST_CASE(do_backspace_no_selection) {
     controller.set_text(make_formatted(L"first line\nsecond line"));
     controller.select_text({0, 4}, {0, 4});
-    controller.do_backspace(false, false);
+    controller.do_backspace(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"firt line\nsecond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(do_backspace_new_line) {
     controller.set_text(make_formatted(L"first line\nsecond line"));
     controller.select_text({1, 0}, {1, 0});
 
-    controller.do_backspace(false, false);
+    controller.do_backspace(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"first linesecond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(do_backspace_new_line) {
 BOOST_AUTO_TEST_CASE(do_backspace_doc_begin) {
     controller.set_text(make_formatted(L"first line\nsecond line"));
     controller.select_text({0, 0}, {0, 0});
-    controller.do_backspace(false, false);
+    controller.do_backspace(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\nsecond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(do_backspace_doc_begin) {
 BOOST_AUTO_TEST_CASE(do_enter) {
     controller.set_text(make_formatted(L"first line\nsecond\nthird line"));
     controller.select_text({1, 3}, {1, 3});
-    controller.do_enter(false, false);
+    controller.do_enter(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\nsec\nond\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
@@ -409,8 +409,8 @@ BOOST_AUTO_TEST_CASE(do_enter_twice_end_line) {
     controller.set_text(make_formatted(L"first line"));
     controller.select_text({0, 10}, {0, 10});
 
-    controller.do_enter(false, false);
-    controller.do_enter(false, false);
+    controller.do_enter(false, false, false);
+    controller.do_enter(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\n\n");
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(do_enter_twice_end_line) {
 BOOST_AUTO_TEST_CASE(do_enter_selection) {
     controller.set_text(make_formatted(L"first line\nsecond\nthird line"));
     controller.select_text({0, 3}, {2, 5});
-    controller.do_enter(false, false);
+    controller.do_enter(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"fir\n line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(do_enter_selection) {
 BOOST_AUTO_TEST_CASE(do_tab_no_expand) {
     controller.set_text(make_formatted(L"first line\nsecond\nthird line"));
     controller.select_text({1, 0}, {1, 0});
-    controller.do_tab(false, false);
+    controller.do_tab(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\n\tsecond\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(do_tab_line_start) {
     controller.set_tab_size(4);
     controller.set_text(make_formatted(L"first line\nsecond\nthird line"));
     controller.select_text({1, 0}, {1, 0});
-    controller.do_tab(false, false);
+    controller.do_tab(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\n    second\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(do_tab_line_middle) {
     controller.set_tab_size(4);
     controller.set_text(make_formatted(L"first line\nsecond\nthird line"));
     controller.select_text({1, 1}, {1, 1});
-    controller.do_tab(false, false);
+    controller.do_tab(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\ns   econd\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(do_tab_selection) {
     controller.set_tab_size(4);
     controller.set_text(make_formatted(L"first line\nsecond\nthird line"));
     controller.select_text({1, 1}, {1, 2});
-    controller.do_tab(false, false);
+    controller.do_tab(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\ns   cond\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(set_pos_after_insert_line) {
 BOOST_AUTO_TEST_CASE(do_enter_indent) {
     controller.set_text(make_formatted(L"  zzz\n\t   first line\nsecond line"));
     controller.select_text({1, 14}, {1, 14});
-    controller.do_enter(false, false);
+    controller.do_enter(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"  zzz\n\t   first line\n\t   \nsecond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(do_enter_indent_add) {
     controller.set_tab_size(4);
     controller.set_text(make_formatted(L"  zzz\n\t   first line {\t \nsecond line"));
     controller.select_text({1, 18}, {1, 18});
-    controller.do_enter(false, false);
+    controller.do_enter(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"  zzz\n\t   first line {\t \n\t       \nsecond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(do_enter_indent_no_add) {
     controller.set_tab_size(4);
     controller.set_text(make_formatted(L"  zzz\n\t   first line {\t \nsecond line"));
     controller.select_text({1, 8}, {1, 8});
-    controller.do_enter(false, false);
+    controller.do_enter(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"  zzz\n\t   firs\n\t   t line {\t \nsecond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
@@ -615,7 +615,7 @@ BOOST_AUTO_TEST_CASE(do_enter_indent_no_add) {
 BOOST_AUTO_TEST_CASE(do_enter_indent_sel) {
     controller.set_text(make_formatted(L"\t   first line\n\nsecond line"));
     controller.select_text({2, 0}, {2, 2});
-    controller.do_enter(false, false);
+    controller.do_enter(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"\t   first line\n\n\n\t   cond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 3);
@@ -629,7 +629,7 @@ BOOST_AUTO_TEST_CASE(do_enter_indent_sel) {
 BOOST_AUTO_TEST_CASE(do_enter_indent_no_prev_line) {
     controller.set_text(make_formatted(L"\t  \n\nsecond line"));
     controller.select_text({1, 0}, {1, 0});
-    controller.do_enter(false, false);
+    controller.do_enter(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"\t  \n\n\nsecond line");
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
@@ -692,7 +692,7 @@ BOOST_AUTO_TEST_CASE(remove_spaces_after_enter) {
     controller.set_text(make_formatted(L"\tline of text\n   \t   "));
     
     controller.select_text({1, 5}, {1, 5});
-    controller.do_enter(false, false);
+    controller.do_enter(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"\tline of text\n\n\t");
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(remove_spaces_after_enter) {
 BOOST_AUTO_TEST_CASE(replace_with_tab) {
     controller.set_text(make_formatted(L"\tline of text\n\tline 2"));
     controller.select_text({0, 2}, {0, 5});
-    controller.do_tab(false, false);
+    controller.do_tab(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"\tl\t of text\n\tline 2");
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(replace_with_tab) {
 BOOST_AUTO_TEST_CASE(add_indent_single_line) {
     controller.set_text(make_formatted(L"\tline of text\n\tline 2"));
     controller.select_text({0, 0}, {0, 13});
-    controller.do_tab(false, false);
+    controller.do_tab(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"\t\tline of text\n\tline 2");
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -734,7 +734,7 @@ BOOST_AUTO_TEST_CASE(add_indent_single_line) {
 BOOST_AUTO_TEST_CASE(remove_indent_single_line) {
     controller.set_text(make_formatted(L"\tline of text\n\tline 2"));
     controller.select_text({0, 0}, {0, 13});
-    controller.do_tab(false, true);
+    controller.do_tab(false, true, false);
 
     BOOST_CHECK(formatted_string(text) == L"line of text\n\tline 2");
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -748,7 +748,7 @@ BOOST_AUTO_TEST_CASE(remove_indent_single_line) {
 BOOST_AUTO_TEST_CASE(add_indent_multi_line) {
     controller.set_text(make_formatted(L"\tline of text\n\tline 2\n\tline3"));
     controller.select_text({0, 5}, {1, 2});
-    controller.do_tab(false, false);
+    controller.do_tab(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"\t\tline of text\n\t\tline 2\n\tline3");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -762,7 +762,7 @@ BOOST_AUTO_TEST_CASE(add_indent_multi_line) {
 BOOST_AUTO_TEST_CASE(remove_indent_multi_line) {
     controller.set_text(make_formatted(L"\tline of text\n\tline 2\n\tline3"));
     controller.select_text({0, 5}, {1, 2});
-    controller.do_tab(false, true);
+    controller.do_tab(false, true, false);
 
     BOOST_CHECK(formatted_string(text) == L"line of text\nline 2\n\tline3");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -777,7 +777,7 @@ BOOST_AUTO_TEST_CASE(remove_indent_multi_line_expand_tabs) {
     controller.set_text(make_formatted(L"        line of text\n        line 2"));
     controller.set_expand_tabs(true);
     controller.select_text({0, 4}, {1, 14});
-    controller.do_tab(false, true);
+    controller.do_tab(false, true, false);
 
     BOOST_CHECK(formatted_string(text) == L"    line of text\n    line 2");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -794,7 +794,7 @@ BOOST_AUTO_TEST_CASE(insert_indent_spaces_empty_line) {
     controller.set_tab_size(4);
     controller.set_text(make_formatted(txt));
     controller.select_text({0, 0}, {0, 0});
-    controller.do_tab(false, false);
+    controller.do_tab(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"    ");
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -810,7 +810,7 @@ BOOST_AUTO_TEST_CASE(do_shift_tab_line_middle) {
     controller.set_tab_size(4);
     controller.set_text(make_formatted(L"first line\ns       econd\nthird line"));
     controller.select_text({1, 7}, {1, 7});
-    controller.do_tab(false, true);
+    controller.do_tab(false, true, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\ns    econd\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(do_shift_tab_line_middle_2) {
     controller.set_tab_size(4);
     controller.set_text(make_formatted(L"first line\ns    econd\nthird line"));
     controller.select_text({1, 4}, {1, 4});
-    controller.do_tab(false, true);
+    controller.do_tab(false, true, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\ns econd\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -987,7 +987,7 @@ BOOST_AUTO_TEST_CASE(do_delete_undo_redo) {
 
 
     controller.select_text({1, 2}, {1, 4});
-    controller.do_delete(false, false);
+    controller.do_delete(false, false, false);
 
     BOOST_CHECK(formatted_string(text) == L"first line\nsend\nthird line");
     BOOST_CHECK(controller.can_undo());
@@ -1034,10 +1034,10 @@ BOOST_AUTO_TEST_CASE(switch_overwrite) {
     controller.set_text(make_formatted(L"\tline of text\n   \t   "));
     BOOST_CHECK(!controller.is_overwrite_mode());
 
-    controller.do_insert(false, false);
+    controller.do_insert(false, false, false);
     BOOST_CHECK(controller.is_overwrite_mode());
 
-    controller.do_insert(false, false);
+    controller.do_insert(false, false, false);
     BOOST_CHECK(!controller.is_overwrite_mode());
 }
 
@@ -1047,9 +1047,9 @@ BOOST_AUTO_TEST_CASE(insert_char_reset_up_down) {
     controller.set_text(make_formatted(L"first line\nsecond"));
     controller.select_text({0, 10}, {0, 10});
 
-    controller.do_down(false, false);
+    controller.do_down(false, false, false);
     controller.do_char(make_char(L'x'));
-    controller.do_up(false, false);
+    controller.do_up(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 7);
@@ -1064,9 +1064,9 @@ BOOST_AUTO_TEST_CASE(delete_char_reset_up_down) {
     controller.set_text(make_formatted(L"first line\nsecond"));
     controller.select_text({0, 10}, {0, 10});
 
-    controller.do_down(false, false);
-    controller.do_backspace(false, false);
-    controller.do_up(false, false);
+    controller.do_down(false, false, false);
+    controller.do_backspace(false, false, false);
+    controller.do_up(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 5);

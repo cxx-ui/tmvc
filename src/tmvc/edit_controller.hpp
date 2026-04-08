@@ -22,19 +22,19 @@ concept edit_controller = selection_controller<Controller> && requires(Controlle
     { cntrl.is_overwrite_mode() } -> std::convertible_to<bool>;
 
     // Performs actions when user presses delete button
-    cntrl.do_delete(true, false);
+    cntrl.do_delete(true, false, false);
 
     // Performs actions when user presses backspace button
-    cntrl.do_backspace(true, false);
+    cntrl.do_backspace(true, false, false);
 
     /// Performs actions when user presses enter button
-    cntrl.do_enter(true, false);
+    cntrl.do_enter(true, false, false);
 
     /// Performs actions when user presses tab button
-    cntrl.do_tab(true, false);
+    cntrl.do_tab(true, false, false);
 
     /// Performs actions when user presses insert button
-    cntrl.do_insert(true, false);
+    cntrl.do_insert(true, false, false);
 
     /// Performs actions when user presses character button
     cntrl.do_char(std::declval<typename Controller::char_t>());

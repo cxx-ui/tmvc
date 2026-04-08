@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(set_pos_keep_anchor_test) {
 BOOST_AUTO_TEST_CASE(do_left_no_selection) {
     text.reset(L"first line\nsecond line");
     controller.select_text({0, 5}, {0, 5});
-    controller.do_left(false, false);
+    controller.do_left(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 4);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(do_left_no_selection) {
 BOOST_AUTO_TEST_CASE(do_left_line_begin) {
     text.reset(L"first line\nsecond line");
     controller.select_text({1, 0}, {1, 0});
-    controller.do_left(false, false);
+    controller.do_left(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 10);
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(do_left_line_begin) {
 BOOST_AUTO_TEST_CASE(do_left_keep_anchor) {
     text.reset(L"first line\nsecond line");
     controller.select_text({0, 5}, {0, 4});
-    controller.do_left(false, true);
+    controller.do_left(false, true, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 3);
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(do_left_keep_anchor) {
 BOOST_AUTO_TEST_CASE(do_left_stop_keep_anchor) {
     text.reset(L"first line\nsecond line");
     controller.select_text({0, 5}, {0, 4});
-    controller.do_left(false, false);
+    controller.do_left(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 3);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(do_left_stop_keep_anchor) {
 BOOST_AUTO_TEST_CASE(do_right_no_selection) {
     text.reset(L"first line\nsecond line");
     controller.select_text({0, 5}, {0, 5});
-    controller.do_right(false, false);
+    controller.do_right(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 6);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(do_right_no_selection) {
 BOOST_AUTO_TEST_CASE(do_right_line_begin) {
     text.reset(L"first line\nsecond line");
     controller.select_text({0, 10}, {0, 10});
-    controller.do_right(false, false);
+    controller.do_right(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
     BOOST_CHECK_EQUAL(selection.pos().column, 0);
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(do_right_line_begin) {
 BOOST_AUTO_TEST_CASE(do_right_keep_anchor) {
     text.reset(L"first line\nsecond line");
     controller.select_text({0, 5}, {0, 6});
-    controller.do_right(false, true);
+    controller.do_right(false, true, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 7);
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(do_right_keep_anchor) {
 BOOST_AUTO_TEST_CASE(do_right_stop_keep_anchor) {
     text.reset(L"first line\nsecond line");
     controller.select_text({0, 5}, {0, 6});
-    controller.do_right(false, false);
+    controller.do_right(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 7);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(do_right_stop_keep_anchor) {
 BOOST_AUTO_TEST_CASE(do_up_simple) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({1, 2}, {1, 2});
-    controller.do_up(false, false);
+    controller.do_up(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 2);
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(do_up_simple) {
 BOOST_AUTO_TEST_CASE(do_up_first_line) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({0, 2}, {0, 2});
-    controller.do_up(false, false);
+    controller.do_up(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 2);
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(do_up_first_line) {
 BOOST_AUTO_TEST_CASE(do_up_keep_anchor) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({1, 3}, {1, 2});
-    controller.do_up(false, true);
+    controller.do_up(false, true, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 2);
@@ -221,13 +221,13 @@ BOOST_AUTO_TEST_CASE(do_up_save_offset) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({2, 7}, {2, 7});
 
-    controller.do_up(false, false);
+    controller.do_up(false, false, false);
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
     BOOST_CHECK_EQUAL(selection.pos().column, 6);
     BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
     BOOST_CHECK_EQUAL(selection.anchor_pos().column, 6);
 
-    controller.do_up(false, false);
+    controller.do_up(false, false, false);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 7);
     BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
@@ -240,19 +240,19 @@ BOOST_AUTO_TEST_CASE(do_up_cancel_save_offset) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({2, 7}, {2, 7});
 
-    controller.do_up(false, false);
+    controller.do_up(false, false, false);
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
     BOOST_CHECK_EQUAL(selection.pos().column, 6);
     BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
     BOOST_CHECK_EQUAL(selection.anchor_pos().column, 6);
 
-    controller.do_left(false, false);
+    controller.do_left(false, false, false);
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
     BOOST_CHECK_EQUAL(selection.pos().column, 5);
     BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
     BOOST_CHECK_EQUAL(selection.anchor_pos().column, 5);
 
-    controller.do_up(false, false);
+    controller.do_up(false, false, false);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 5);
     BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(do_up_cancel_save_offset) {
 BOOST_AUTO_TEST_CASE(do_down_simple) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({1, 2}, {1, 2});
-    controller.do_down(false, false);
+    controller.do_down(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
     BOOST_CHECK_EQUAL(selection.pos().column, 2);
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(do_down_simple) {
 BOOST_AUTO_TEST_CASE(do_down_last_line) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({2, 2}, {2, 2});
-    controller.do_down(false, false);
+    controller.do_down(false, false, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
     BOOST_CHECK_EQUAL(selection.pos().column, 2);
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(do_down_last_line) {
 BOOST_AUTO_TEST_CASE(do_down_keep_anchor) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({1, 3}, {1, 4});
-    controller.do_down(false, true);
+    controller.do_down(false, true, false);
 
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
     BOOST_CHECK_EQUAL(selection.pos().column, 4);
@@ -304,13 +304,13 @@ BOOST_AUTO_TEST_CASE(do_down_save_offset) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({0, 7}, {0, 7});
 
-    controller.do_down(false, false);
+    controller.do_down(false, false, false);
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
     BOOST_CHECK_EQUAL(selection.pos().column, 6);
     BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
     BOOST_CHECK_EQUAL(selection.anchor_pos().column, 6);
 
-    controller.do_down(false, false);
+    controller.do_down(false, false, false);
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
     BOOST_CHECK_EQUAL(selection.pos().column, 7);
     BOOST_CHECK_EQUAL(selection.anchor_pos().line, 2);
@@ -323,19 +323,19 @@ BOOST_AUTO_TEST_CASE(do_down_cancel_save_offset) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({0, 7}, {0, 7});
 
-    controller.do_down(false, false);
+    controller.do_down(false, false, false);
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
     BOOST_CHECK_EQUAL(selection.pos().column, 6);
     BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
     BOOST_CHECK_EQUAL(selection.anchor_pos().column, 6);
 
-    controller.do_left(false, false);
+    controller.do_left(false, false, false);
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
     BOOST_CHECK_EQUAL(selection.pos().column, 5);
     BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
     BOOST_CHECK_EQUAL(selection.anchor_pos().column, 5);
 
-    controller.do_down(false, false);
+    controller.do_down(false, false, false);
     BOOST_CHECK_EQUAL(selection.pos().line, 2);
     BOOST_CHECK_EQUAL(selection.pos().column, 5);
     BOOST_CHECK_EQUAL(selection.anchor_pos().line, 2);
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(do_down_cancel_save_offset) {
 BOOST_AUTO_TEST_CASE(do_home) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({0, 2}, {1, 3});
-    controller.do_home(false, false);
+    controller.do_home(false, false, false);
 
     BOOST_CHECK(string(text) == L"first line\nsecond\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(do_home) {
 BOOST_AUTO_TEST_CASE(do_end) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({0, 2}, {1, 3});
-    controller.do_end(false, false);
+    controller.do_end(false, false, false);
 
     BOOST_CHECK(string(text) == L"first line\nsecond\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(do_end) {
 BOOST_AUTO_TEST_CASE(do_home_shift) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({0, 2}, {1, 3});
-    controller.do_home(false, true);
+    controller.do_home(false, true, false);
 
     BOOST_CHECK(string(text) == L"first line\nsecond\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(do_home_shift) {
 BOOST_AUTO_TEST_CASE(do_end_shift) {
     text.reset(L"first line\nsecond\nthird line");
     controller.select_text({0, 2}, {1, 3});
-    controller.do_end(false, true);
+    controller.do_end(false, true, false);
 
     BOOST_CHECK(string(text) == L"first line\nsecond\nthird line");
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(move_next_word) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 0}, {0, 0});
-    controller.do_right(true, false);
+    controller.do_right(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_space) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 4}, {0, 4});
-    controller.do_right(true, false);
+    controller.do_right(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_no_alnum) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 8}, {0, 8});
-    controller.do_right(true, false);
+    controller.do_right(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_via_alnum) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 13}, {0, 13});
-    controller.do_right(true, false);
+    controller.do_right(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_eol) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 16}, {0, 16});
-    controller.do_right(true, false);
+    controller.do_right(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_next_line) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 18}, {0, 18});
-    controller.do_right(true, false);
+    controller.do_right(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -494,7 +494,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 12}, {0, 12});
-    controller.do_left(true, false);
+    controller.do_left(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_space) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 8}, {0, 8});
-    controller.do_left(true, false);
+    controller.do_left(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_no_alnum) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 18}, {0, 18});
-    controller.do_left(true, false);
+    controller.do_left(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_via_alnum) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 16}, {0, 16});
-    controller.do_left(true, false);
+    controller.do_left(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_start) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 4}, {0, 4});
-    controller.do_left(true, false);
+    controller.do_left(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_prev_line) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({1, 0}, {1, 0});
-    controller.do_left(true, false);
+    controller.do_left(true, false, false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);

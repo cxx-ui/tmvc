@@ -29,6 +29,7 @@ bool process_selection_key_event(Controller & controller,
                                  const std::optional<position> & pos = std::nullopt) {
     bool ctrl = (event->modifiers() & Qt::ControlModifier) != 0;
     bool shift = (event->modifiers() & Qt::ShiftModifier) != 0;
+    bool alt = (event->modifiers() & Qt::AltModifier) != 0;
 
     // processing standard navigation key sequences
     if (event->matches(QKeySequence::Copy)) {
@@ -48,27 +49,27 @@ bool process_selection_key_event(Controller & controller,
 
     switch (event->key()) {
     case Qt::Key_Left:
-        controller.do_left(ctrl, shift, pos);
+        controller.do_left(ctrl, shift, alt, pos);
         event->accept();
         return true;
     case Qt::Key_Right:
-        controller.do_right(ctrl, shift, pos);
+        controller.do_right(ctrl, shift, alt, pos);
         event->accept();
         return true;
     case Qt::Key_Up:
-        controller.do_up(ctrl, shift, pos);
+        controller.do_up(ctrl, shift, alt, pos);
         event->accept();
         return true;
     case Qt::Key_Down:
-        controller.do_down(ctrl, shift, pos);
+        controller.do_down(ctrl, shift, alt, pos);
         event->accept();
         return true;
     case Qt::Key_Home:
-        controller.do_home(ctrl, shift);
+        controller.do_home(ctrl, shift, alt);
         event->accept();
         return true;
     case Qt::Key_End:
-        controller.do_end(ctrl, shift);
+        controller.do_end(ctrl, shift, alt);
         event->accept();
         return true;
 
@@ -96,6 +97,7 @@ bool process_edit_key_event(Controller & controller,
 
     bool ctrl = (event->modifiers() & Qt::ControlModifier) != 0;
     bool shift = (event->modifiers() & Qt::ShiftModifier) != 0;
+    bool alt = (event->modifiers() & Qt::AltModifier) != 0;
     bool meta = (event->modifiers() & Qt::MetaModifier) != 0;
 
     // processing standard editing key sequences
@@ -122,32 +124,32 @@ bool process_edit_key_event(Controller & controller,
     // processing modification keys
     switch (event->key()) {
     case Qt::Key_Backspace:
-        controller.do_backspace(ctrl, shift);
+        controller.do_backspace(ctrl, shift, alt);
         event->accept();
         return true;
     case Qt::Key_Delete:
-        controller.do_delete(ctrl, shift);
+        controller.do_delete(ctrl, shift, alt);
         event->accept();
         return true;
 
     case Qt::Key_Enter:
     case Qt::Key_Return:
-        controller.do_enter(ctrl, shift);
+        controller.do_enter(ctrl, shift, alt);
         event->accept();
         return true;
 
     case Qt::Key_Tab:
-        controller.do_tab(ctrl, shift);
+        controller.do_tab(ctrl, shift, alt);
         event->accept();
         return true;
 
     case Qt::Key_Backtab:
-        controller.do_tab(ctrl, true);
+        controller.do_tab(ctrl, true, alt);
         event->accept();
         return true;
 
     case Qt::Key_Insert:
-        controller.do_insert(ctrl, shift);
+        controller.do_insert(ctrl, shift, alt);
         event->accept();
         return true;
 

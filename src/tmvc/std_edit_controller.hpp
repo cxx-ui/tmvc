@@ -93,19 +93,19 @@ public:
     // User actions
 
     /// Performs actions when user presses delete button
-    void do_delete(bool ctrl, bool shift);
+    void do_delete(bool ctrl, bool shift, bool alt);
 
     /// Performs actions when user presses backspace button
-    void do_backspace(bool ctrl, bool shift);
+    void do_backspace(bool ctrl, bool shift, bool alt);
 
     /// Performs actions when user presses enter button
-    void do_enter(bool ctrl, bool shift);
+    void do_enter(bool ctrl, bool shift, bool alt);
 
     /// Performs actions when user presses tab button
-    void do_tab(bool ctrl, bool shift);
+    void do_tab(bool ctrl, bool shift, bool alt);
 
     /// Performs action when user presses insert button
-    void do_insert(bool ctrl, bool shift);
+    void do_insert(bool ctrl, bool shift, bool alt);
 
     /// Performs actions when user presses character button
     void do_char(char_t c);

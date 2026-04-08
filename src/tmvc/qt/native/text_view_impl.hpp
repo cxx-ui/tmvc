@@ -222,14 +222,15 @@ protected:
             auto modifiers = QApplication::keyboardModifiers();
             bool ctrl = modifiers & Qt::ControlModifier;
             bool shift = modifiers & Qt::ShiftModifier;
+            bool alt = modifiers & Qt::AltModifier;
 
             switch (event->key()) {
             case Qt::Key_PageUp:
-                this->cntrl_.do_page_up(ctrl, shift, pos);
+                this->cntrl_.do_page_up(ctrl, shift, alt, pos);
                 event->accept();
                 return;
             case Qt::Key_PageDown:
-                this->cntrl_.do_page_down(ctrl, shift, pos);
+                this->cntrl_.do_page_down(ctrl, shift, alt, pos);
                 event->accept();
                 return;
             default:
