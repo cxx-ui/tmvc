@@ -119,6 +119,12 @@ public:
         init();
     }
 
+    /// Sets viewport margins for text content area.
+    /// Exposed as public wrapper because underlying Qt API is protected.
+    void set_viewport_margins(int left, int top, int right, int bottom) {
+        this->setViewportMargins(left, top, right, bottom);
+    }
+
 protected:
     /// Handles key press event in text view
     void keyPressEvent(QKeyEvent * event) override {
