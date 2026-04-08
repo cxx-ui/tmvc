@@ -9,7 +9,9 @@
 
 #pragma once
 
+#include "position.hpp"
 #include <cstdint>
+#include <optional>
 #include <utility>
 
 
@@ -19,6 +21,12 @@ namespace tmvc {
 /// Concept that all classes derived from std_paging_controller should confirm.
 template <typename Derived>
 concept std_paging_controller_derived = requires(Derived & derived) {
+    // Returns selection anchor position
+    { derived.anchor_pos() } -> std::convertible_to<position>;
+
+    // Selects text
+    derived.select_text(std::declval<position>(), std::declval<position>(), std::declval<bool>());
+
     // Moves position up by specified number of lines
     derived.move_lines_up(std::declval<uint64_t>(), std::declval<bool>());
 
@@ -38,15 +46,39 @@ public:
     }
 
     // Performs actions when user presses page up button
-    void do_page_up(bool ctrl, bool shift) {
+    void do_page_up(bool,
+                    bool shift,
+                    const std::optional<position> & pos = std::nullopt) {
         static_assert(std_paging_controller_derived<Derived>);
-        static_cast<Derived*>(this)->move_lines_up(viewport_height_, shift);
+        auto * d = static_cast<Derived*>(this);
+        if (pos) {
+            if (shift) {
+                d->select_text(d->anchor_pos(), *pos, false);
+            } else {
+                d->select_text(*pos, *pos, false);
+            }
+            return;
+        }
+
+        d->move_lines_up(viewport_height_, shift);
     }
 
     // Performs actions when user presses page down button
-    void do_page_down(bool ctrl, bool shift) {
+    void do_page_down(bool,
+                      bool shift,
+                      const std::optional<position> & pos = std::nullopt) {
         static_assert(std_paging_controller_derived<Derived>);
-        static_cast<Derived*>(this)->move_lines_down(viewport_height_, shift);
+        auto * d = static_cast<Derived*>(this);
+        if (pos) {
+            if (shift) {
+                d->select_text(d->anchor_pos(), *pos, false);
+            } else {
+                d->select_text(*pos, *pos, false);
+            }
+            return;
+        }
+
+        d->move_lines_down(viewport_height_, shift);
     }
 
 private:

@@ -149,6 +149,33 @@ protected:
         return impl::get_position_from_cursor(target_cursor);
     }
 
+    /// Calculates suggested text position for visual page up/down movement
+    std::optional<position> suggested_page_up_down_pos(bool is_up) const {
+        if (this->lineWrapMode() == QtTextEdit::NoWrap) {
+            return std::nullopt;
+        }
+
+        auto cursor = this->textCursor();
+        auto rect = this->cursorRect(cursor);
+        auto line_h = QFontMetrics{this->font()}.lineSpacing();
+
+        QPoint target = rect.center();
+        if (!up_down_saved_x_) {
+            up_down_saved_x_ = target.x();
+        } else {
+            target.setX(*up_down_saved_x_);
+        }
+
+        auto page_delta = this->viewport()->height() - line_h;
+        if (page_delta < line_h) {
+            page_delta = line_h;
+        }
+
+        target.setY(target.y() + (is_up ? -page_delta : page_delta));
+        auto target_cursor = this->cursorForPosition(target);
+        return impl::get_position_from_cursor(target_cursor);
+    }
+
     /// Handles key press event in text view
     void keyPressEvent(QKeyEvent * event) override {
         if constexpr (!qt_std_controller<Controller>) {
@@ -158,12 +185,38 @@ protected:
                 pos = suggested_up_down_pos(true);
             } else if (event->key() == Qt::Key_Down) {
                 pos = suggested_up_down_pos(false);
+            } else if (event->key() == Qt::Key_PageUp) {
+                pos = suggested_page_up_down_pos(true);
+            } else if (event->key() == Qt::Key_PageDown) {
+                pos = suggested_page_up_down_pos(false);
             } else {
                 reset_up_down_saved_x();
             }
 
             // passing key event to user defined controller
-            impl::process_edit_key_event(this->cntrl_, event, pos);
+            auto handled = impl::process_edit_key_event(this->cntrl_, event, pos);
+            if (handled) {
+                return;
+            }
+
+            auto modifiers = QApplication::keyboardModifiers();
+            bool ctrl = modifiers & Qt::ControlModifier;
+            bool shift = modifiers & Qt::ShiftModifier;
+
+            switch (event->key()) {
+            case Qt::Key_PageUp:
+                this->cntrl_.do_page_up(ctrl, shift, pos);
+                event->accept();
+                return;
+            case Qt::Key_PageDown:
+                this->cntrl_.do_page_down(ctrl, shift, pos);
+                event->accept();
+                return;
+            default:
+                break;
+            }
+
+            QtTextEdit::keyPressEvent(event);
         } else {
             // passing key event to Qt control
             QtTextEdit::keyPressEvent(event);

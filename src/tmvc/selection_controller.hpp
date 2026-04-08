@@ -55,6 +55,12 @@ concept selection_controller = requires(Controller & cntrl, const position & p) 
     // Performs actions when user presses end button
     cntrl.do_end(true, false);
 
+    // Performs actions when user presses page up button
+    cntrl.do_page_up(true, false, std::declval<std::optional<position>>());
+
+    // Performs actions when user presses page down button
+    cntrl.do_page_down(true, false, std::declval<std::optional<position>>());
+
 
     ////////////////////////////////////////////////////////////
     // Predefined user actions
@@ -105,10 +111,10 @@ concept selection_controller_with_paging = selection_controller<Controller> && r
     cntrl.set_viewport_height(std::declval<uint64_t>());
 
     // Performs actions when user presses page up button
-    cntrl.do_page_up(true, false);
+    cntrl.do_page_up(true, false, std::declval<std::optional<position>>());
 
     // Performs actions when user presses page down button
-    cntrl.do_page_down(true, false);
+    cntrl.do_page_down(true, false, std::declval<std::optional<position>>());
 };
 
 
