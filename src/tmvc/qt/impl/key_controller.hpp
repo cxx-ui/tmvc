@@ -91,6 +91,7 @@ bool process_edit_key_event(Controller & controller, QKeyEvent * event) {
 
     bool ctrl = (event->modifiers() & Qt::ControlModifier) != 0;
     bool shift = (event->modifiers() & Qt::ShiftModifier) != 0;
+    bool meta = (event->modifiers() & Qt::MetaModifier) != 0;
 
     // processing standard editing key sequences
     if (event->matches(QKeySequence::Cut)) {
@@ -147,7 +148,7 @@ bool process_edit_key_event(Controller & controller, QKeyEvent * event) {
 
     default:
         // inserting single character if its printable
-        if (!event->text().isEmpty()) {
+        if (!ctrl && !meta && !event->text().isEmpty()) {
             auto chars = qstring_to_chars<char_t>(event->text());
             if (std::ranges::size(chars) == 1) {
                 std::locale loc("");
