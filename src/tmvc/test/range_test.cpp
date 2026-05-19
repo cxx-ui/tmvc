@@ -125,6 +125,15 @@ BOOST_AUTO_TEST_CASE(adjust_range_after_erase_entire_range) {
     BOOST_CHECK(res.empty());
 }
 
+BOOST_AUTO_TEST_CASE(adjust_range_after_insert_empty_range_at_insert_start) {
+    // A zero-width range at the insert start should shift as a unit, not invert.
+    range rng{{0, 5}, {0, 5}};
+    range ins{{0, 5}, {0, 8}};
+    auto res = adjust_range_after_insert(rng, ins);
+    BOOST_CHECK(res.empty());
+    BOOST_CHECK_EQUAL(res.start.column, 8);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

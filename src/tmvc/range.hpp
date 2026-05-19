@@ -71,7 +71,14 @@ inline position adjust_pos_after_erase(const position & pos, const range & r) {
 }
 
 /// Returns range adjusted after insertion in specified range.
+/// Any range (including zero-width) is shifted when inserting just before it.
 inline range adjust_range_after_insert(const range & rng, const range & r) {
+    if (rng.empty()) {
+        // For a zero-width range the asymmetric move_eq_pos treatment (true for start,
+        // false for end) would produce start > end. Shift both endpoints as a unit instead.
+        auto p = adjust_pos_after_insert(rng.start, r, true);
+        return {p, p};
+    }
     return {
         adjust_pos_after_insert(rng.start, r, true),
         adjust_pos_after_insert(rng.end, r, false)
