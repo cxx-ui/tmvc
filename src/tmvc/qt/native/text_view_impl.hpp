@@ -214,7 +214,13 @@ protected:
             }
 
             // passing key event to user defined controller
-            auto handled = impl::process_edit_key_event(this->cntrl_, event, pos);
+            bool handled = false;
+            if constexpr (edit_controller<Controller>) {
+                handled = impl::process_edit_key_event(this->cntrl_, event, pos);
+            } else {
+                handled = impl::process_selection_key_event(this->cntrl_, event, pos);
+            }
+
             if (handled) {
                 return;
             }
@@ -237,7 +243,7 @@ protected:
                 break;
             }
 
-            QtTextEdit::keyPressEvent(event);
+            event->ignore();
         } else {
             // passing key event to Qt control
             QtTextEdit::keyPressEvent(event);
