@@ -141,4 +141,46 @@ concept selection_controller_with_select_text_for =
     selection_controller_for<Controller, TextModel>;
 
 
+/// Represents selection controller with word navigation
+template <typename Controller>
+concept selection_controller_with_word_navigation =
+    selection_controller<Controller> && requires(Controller & cntrl) {
+    // Moves cursor to next word
+    cntrl.move_next_word(true, false, false);
+
+    // Moves cursor to previous word
+    cntrl.move_prev_word(true, false, false);
+};
+
+
+/// Represents selection controller with line navigation
+template <typename Controller>
+concept selection_controller_with_line_navigation =
+    selection_controller<Controller> && requires(Controller & cntrl) {
+    // Moves cursor to start of line
+    cntrl.move_line_start(true, false, false, std::declval<std::optional<position>>());
+
+    // Moves cursor to end of line
+    cntrl.move_line_end(true, false, false, std::declval<std::optional<position>>());
+
+    // Moves cursor to previous line
+    cntrl.move_prev_line(true, false, false, std::declval<std::optional<position>>());
+
+    // Moves cursor to next line
+    cntrl.move_next_line(true, false, false, std::declval<std::optional<position>>());
+};
+
+
+/// Represents selection controller with block navigation
+template <typename Controller>
+concept selection_controller_with_block_navigation =
+    selection_controller<Controller> && requires(Controller & cntrl) {
+    // Moves cursor to start of block
+    cntrl.move_block_start(true, false, false);
+
+    // Moves cursor to end of block
+    cntrl.move_block_end(true, false, false);
+};
+
+
 }

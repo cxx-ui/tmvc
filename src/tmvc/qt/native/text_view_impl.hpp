@@ -20,6 +20,7 @@
 #include "../../text_model.hpp"
 #include <optional>
 #include <QApplication>
+#include <QDebug>
 #include <QFontMetrics>
 #include <QKeySequence>
 #include <QPlainTextEdit>
@@ -191,23 +192,36 @@ protected:
     /// Handles key press event in text view
     void keyPressEvent(QKeyEvent * event) override {
         if constexpr (!qt_std_controller<Controller>) {
-            // detecting suggested move posigion for up and down keys
+            qDebug() << "key:" << event->key()
+                     << "nativeVirtualKey:" << event->nativeVirtualKey()
+                     << "nativeScanCode:" << event->nativeScanCode()
+                     << "nativeModifiers:" << event->nativeModifiers()
+                     << "text:" << event->text()
+                     << "modifiers:" << event->modifiers()
+                     << "matches Copy:" << event->matches(QKeySequence::Copy)
+                     << "matches Cut:" << event->matches(QKeySequence::Cut)
+                     << "matches Paste:" << event->matches(QKeySequence::Paste)
+                     << "matches SelectAll:" << event->matches(QKeySequence::SelectAll);
+
+            // detecting suggested move position based on standard key sequences
             std::optional<position> pos = std::nullopt;
-            if (event->key() == Qt::Key_Up) {
+            if (event->matches(QKeySequence::MoveToPreviousLine) ||
+                event->matches(QKeySequence::SelectPreviousLine)) {
                 pos = suggested_up_down_pos(true);
-            } else if (event->key() == Qt::Key_Down) {
+            } else if (event->matches(QKeySequence::MoveToNextLine) ||
+                       event->matches(QKeySequence::SelectNextLine)) {
                 pos = suggested_up_down_pos(false);
-            } else if (event->key() == Qt::Key_PageUp) {
+            } else if (event->matches(QKeySequence::MoveToPreviousPage) ||
+                       event->matches(QKeySequence::SelectPreviousPage)) {
                 pos = suggested_page_up_down_pos(true);
-            } else if (event->key() == Qt::Key_PageDown) {
+            } else if (event->matches(QKeySequence::MoveToNextPage) ||
+                       event->matches(QKeySequence::SelectNextPage)) {
                 pos = suggested_page_up_down_pos(false);
-            } else if (event->key() == Qt::Key_Left &&
-                       (event->matches(QKeySequence::MoveToStartOfLine) ||
-                        event->matches(QKeySequence::SelectStartOfLine))) {
+            } else if (event->matches(QKeySequence::MoveToStartOfLine) ||
+                       event->matches(QKeySequence::SelectStartOfLine)) {
                 pos = suggested_left_right_pos(true);
-            } else if (event->key() == Qt::Key_Right &&
-                       (event->matches(QKeySequence::MoveToEndOfLine) ||
-                        event->matches(QKeySequence::SelectEndOfLine))) {
+            } else if (event->matches(QKeySequence::MoveToEndOfLine) ||
+                       event->matches(QKeySequence::SelectEndOfLine)) {
                 pos = suggested_left_right_pos(false);
             } else {
                 reset_up_down_saved_x();
@@ -223,24 +237,6 @@ protected:
 
             if (handled) {
                 return;
-            }
-
-            auto modifiers = QApplication::keyboardModifiers();
-            bool ctrl = modifiers & Qt::ControlModifier;
-            bool shift = modifiers & Qt::ShiftModifier;
-            bool alt = modifiers & Qt::AltModifier;
-
-            switch (event->key()) {
-            case Qt::Key_PageUp:
-                this->cntrl_.do_page_up(ctrl, shift, alt, pos);
-                event->accept();
-                return;
-            case Qt::Key_PageDown:
-                this->cntrl_.do_page_down(ctrl, shift, alt, pos);
-                event->accept();
-                return;
-            default:
-                break;
             }
 
             event->ignore();

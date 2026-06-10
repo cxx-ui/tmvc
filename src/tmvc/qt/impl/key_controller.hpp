@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "../../edit_controller.hpp"
 #include "../../selection_controller.hpp"
 #include "string.hpp"
 #include <optional>
@@ -44,6 +45,73 @@ bool process_selection_key_event(Controller & controller,
         return true;
     }
 
+    // dispatching word navigation sequences if controller supports them
+    if constexpr (selection_controller_with_word_navigation<Controller>) {
+        if (event->matches(QKeySequence::MoveToNextWord) ||
+            event->matches(QKeySequence::SelectNextWord)) {
+            controller.move_next_word(ctrl, alt, shift);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::MoveToPreviousWord) ||
+                   event->matches(QKeySequence::SelectPreviousWord)) {
+            controller.move_prev_word(ctrl, alt, shift);
+            event->accept();
+            return true;
+        }
+    }
+
+    // dispatching line navigation sequences if controller supports them
+    if constexpr (selection_controller_with_line_navigation<Controller>) {
+        if (event->matches(QKeySequence::MoveToStartOfLine) ||
+            event->matches(QKeySequence::SelectStartOfLine)) {
+            controller.move_line_start(ctrl, alt, shift, pos);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::MoveToEndOfLine) ||
+                   event->matches(QKeySequence::SelectEndOfLine)) {
+            controller.move_line_end(ctrl, alt, shift, pos);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::MoveToPreviousLine) ||
+                   event->matches(QKeySequence::SelectPreviousLine)) {
+            controller.move_prev_line(ctrl, alt, shift, pos);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::MoveToNextLine) ||
+                   event->matches(QKeySequence::SelectNextLine)) {
+            controller.move_next_line(ctrl, alt, shift, pos);
+            event->accept();
+            return true;
+        }
+    }
+
+    // dispatching block navigation sequences if controller supports them
+    if constexpr (selection_controller_with_block_navigation<Controller>) {
+        if (event->matches(QKeySequence::MoveToStartOfBlock) ||
+            event->matches(QKeySequence::SelectStartOfBlock)) {
+            controller.move_block_start(ctrl, alt, shift);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::MoveToEndOfBlock) ||
+                   event->matches(QKeySequence::SelectEndOfBlock)) {
+            controller.move_block_end(ctrl, alt, shift);
+            event->accept();
+            return true;
+        }
+    }
+
+    // dispatching page navigation sequences
+    if (event->matches(QKeySequence::MoveToPreviousPage) ||
+        event->matches(QKeySequence::SelectPreviousPage)) {
+        controller.do_page_up(ctrl, shift, alt, pos);
+        event->accept();
+        return true;
+    } else if (event->matches(QKeySequence::MoveToNextPage) ||
+               event->matches(QKeySequence::SelectNextPage)) {
+        controller.do_page_down(ctrl, shift, alt, pos);
+        event->accept();
+        return true;
+    }
 
     // processing navigation keys
 
@@ -72,11 +140,6 @@ bool process_selection_key_event(Controller & controller,
         controller.do_end(ctrl, shift, alt);
         event->accept();
         return true;
-
-    // delegating pageup/pagedown processing to QPlainTextEdit widget
-    case Qt::Key_PageUp:
-    case Qt::Key_PageDown:
-        return false;
 
     default:
         // doing nothing for now

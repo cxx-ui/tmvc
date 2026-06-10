@@ -338,7 +338,30 @@ public:
     }
 
     /// Performs actions when user presses home button
-    void do_home(bool ctrl, bool shift, bool) {
+    void do_home(bool ctrl, bool shift, bool alt) {
+        move_line_start(ctrl, alt, shift, std::nullopt);
+    }
+
+    /// Performs actions when user presses end button
+    void do_end(bool ctrl, bool shift, bool alt) {
+        move_line_end(ctrl, alt, shift, std::nullopt);
+    }
+
+    /// Moves cursor to start of line, using target_pos for visual wrap mode
+    void move_line_start(bool,
+                         bool,
+                         bool shift,
+                         const std::optional<position> & target_pos) {
+        if (target_pos) {
+            if (shift) {
+                set_pos_keep_anchor(*target_pos);
+            } else {
+                set_pos_move_anchor(*target_pos);
+            }
+
+            return;
+        }
+
         position new_pos{derived_pos().line, 0};
         if (shift) {
             set_pos_keep_anchor(new_pos);
@@ -347,14 +370,57 @@ public:
         }
     }
 
-    /// Performs actions when user presses end button
-    void do_end(bool ctrl, bool shift, bool) {
+    /// Moves cursor to end of line, using target_pos for visual wrap mode
+    void move_line_end(bool,
+                       bool,
+                       bool shift,
+                       const std::optional<position> & target_pos) {
+        if (target_pos) {
+            if (shift) {
+                set_pos_keep_anchor(*target_pos);
+            } else {
+                set_pos_move_anchor(*target_pos);
+            }
+
+            return;
+        }
+
         position new_pos{derived_pos().line, text_mdl_.line_size(derived_pos().line)};
         if (shift) {
             set_pos_keep_anchor(new_pos);
         } else {
             set_pos_move_anchor(new_pos);
         }
+    }
+
+    /// Moves cursor to next word
+    void move_next_word(bool, bool, bool shift) {
+        move_next_word(shift);
+    }
+
+    /// Moves cursor to previous word
+    void move_prev_word(bool, bool, bool shift) {
+        move_prev_word(shift);
+    }
+
+    /// Moves cursor to previous line
+    void move_prev_line(bool, bool, bool shift, const std::optional<position> & target_pos) {
+        do_up(false, shift, false, target_pos);
+    }
+
+    /// Moves cursor to next line
+    void move_next_line(bool, bool, bool shift, const std::optional<position> & target_pos) {
+        do_down(false, shift, false, target_pos);
+    }
+
+    /// Moves cursor to start of block
+    void move_block_start(bool ctrl, bool alt, bool shift) {
+        move_line_start(ctrl, alt, shift, std::nullopt);
+    }
+
+    /// Moves cursor to end of block
+    void move_block_end(bool ctrl, bool alt, bool shift) {
+        move_line_end(ctrl, alt, shift, std::nullopt);
     }
 
     ////////////////////////////////////////////////////////////

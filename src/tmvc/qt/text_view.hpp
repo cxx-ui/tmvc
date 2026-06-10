@@ -338,6 +338,16 @@ protected:
 
 
     void keyPressEvent(QKeyEvent * event) override {
+        // scroll viewport for page navigation before cursor movement
+        bool shift = (event->modifiers() & Qt::ShiftModifier) != 0;
+        if (event->matches(QKeySequence::MoveToPreviousPage) ||
+            event->matches(QKeySequence::SelectPreviousPage)) {
+            viewport_mdl_.do_page_up(shift);
+        } else if (event->matches(QKeySequence::MoveToNextPage) ||
+                   event->matches(QKeySequence::SelectNextPage)) {
+            viewport_mdl_.do_page_down(shift);
+        }
+
         bool event_processed = false;
         if constexpr (edit_controller<Controller>) {
             event_processed = impl::process_edit_key_event(controller_, event);
@@ -348,29 +358,6 @@ protected:
         if (event_processed) {
             reset_cursor_visibility();
             return;
-        }
-
-        bool ctrl = (event->modifiers() & Qt::ControlModifier) != 0;
-        bool shift = (event->modifiers() & Qt::ShiftModifier) != 0;
-        bool alt = (event->modifiers() & Qt::AltModifier) != 0;
-
-        // processing page up / page down keys
-        switch (event->key()) {
-        case Qt::Key_PageUp:
-            viewport_mdl_.do_page_up(shift);
-            controller_.do_page_up(ctrl, shift, alt);
-            reset_cursor_visibility();
-            event->accept();
-            return;
-        case Qt::Key_PageDown:
-            viewport_mdl_.do_page_down(shift);
-            controller_.do_page_down(ctrl, shift, alt);
-            reset_cursor_visibility();
-            event->accept();
-            return;
-        default:
-            // doing nothing for now
-            break;
         }
 
         event->ignore();
