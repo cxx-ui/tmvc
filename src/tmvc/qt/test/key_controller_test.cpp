@@ -556,6 +556,34 @@ BOOST_AUTO_TEST_CASE(select_end_of_block_calls_move_block_end_with_shift_true) {
     BOOST_CHECK(ctrl.last_move_block_end->shift);
 }
 
+BOOST_AUTO_TEST_CASE(alt_up_calls_move_block_start_with_shift_false) {
+    QKeyEvent e{QEvent::KeyPress, Qt::Key_Up, Qt::AltModifier};
+    BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
+    BOOST_REQUIRE(ctrl.last_move_block_start.has_value());
+    BOOST_CHECK(!ctrl.last_move_block_start->shift);
+}
+
+BOOST_AUTO_TEST_CASE(shift_alt_up_calls_move_block_start_with_shift_true) {
+    QKeyEvent e{QEvent::KeyPress, Qt::Key_Up, Qt::AltModifier | Qt::ShiftModifier};
+    BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
+    BOOST_REQUIRE(ctrl.last_move_block_start.has_value());
+    BOOST_CHECK(ctrl.last_move_block_start->shift);
+}
+
+BOOST_AUTO_TEST_CASE(alt_down_calls_move_block_end_with_shift_false) {
+    QKeyEvent e{QEvent::KeyPress, Qt::Key_Down, Qt::AltModifier};
+    BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
+    BOOST_REQUIRE(ctrl.last_move_block_end.has_value());
+    BOOST_CHECK(!ctrl.last_move_block_end->shift);
+}
+
+BOOST_AUTO_TEST_CASE(shift_alt_down_calls_move_block_end_with_shift_true) {
+    QKeyEvent e{QEvent::KeyPress, Qt::Key_Down, Qt::AltModifier | Qt::ShiftModifier};
+    BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
+    BOOST_REQUIRE(ctrl.last_move_block_end.has_value());
+    BOOST_CHECK(ctrl.last_move_block_end->shift);
+}
+
 BOOST_AUTO_TEST_CASE(move_to_previous_line_calls_move_prev_line_with_shift_false) {
     auto e = make_standard_key_event(QKeySequence::MoveToPreviousLine);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));

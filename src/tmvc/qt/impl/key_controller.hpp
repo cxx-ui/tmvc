@@ -87,13 +87,18 @@ bool process_selection_key_event(Controller & controller,
 
     // dispatching block navigation sequences if controller supports them
     if constexpr (selection_controller_with_block_navigation<Controller>) {
+        // Alt+Up/Down are the macOS bindings for MoveToStartOfBlock/MoveToEndOfBlock.
+        // On non-macOS platforms the standard sequence is unbound, so we match them
+        // explicitly here so that the behaviour is consistent across all platforms.
+        bool alt_up   = alt && !ctrl && event->key() == Qt::Key_Up;
+        bool alt_down = alt && !ctrl && event->key() == Qt::Key_Down;
         if (event->matches(QKeySequence::MoveToStartOfBlock) ||
-            event->matches(QKeySequence::SelectStartOfBlock)) {
+            event->matches(QKeySequence::SelectStartOfBlock) || alt_up) {
             controller.move_block_start(ctrl, alt, shift);
             event->accept();
             return true;
         } else if (event->matches(QKeySequence::MoveToEndOfBlock) ||
-                   event->matches(QKeySequence::SelectEndOfBlock)) {
+                   event->matches(QKeySequence::SelectEndOfBlock) || alt_down) {
             controller.move_block_end(ctrl, alt, shift);
             event->accept();
             return true;
