@@ -8,4 +8,4 @@
 /// Contains definition of main function for Qt tests.
 
 #define BOOST_TEST_MODULE "tmvc-qt-test"
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
