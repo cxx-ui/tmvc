@@ -15,7 +15,7 @@ add_executable(tmvc-test
                viewer_controller_test.cpp
                viewport_model_test.cpp)
 
-target_link_libraries(tmvc-test PRIVATE tmvc-qt)
+target_link_libraries(tmvc-test PRIVATE tmvc-qt Boost::boost)
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     target_link_libraries(tmvc-test PRIVATE rt)

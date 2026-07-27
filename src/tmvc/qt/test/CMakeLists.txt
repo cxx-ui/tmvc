@@ -4,7 +4,7 @@ add_executable(tmvc-qt-test
                key_controller_test.cpp
                test.cpp)
 
-target_link_libraries(tmvc-qt-test PRIVATE tmvc-qt)
+target_link_libraries(tmvc-qt-test PRIVATE tmvc-qt Boost::boost)
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     target_link_libraries(tmvc-qt-test PRIVATE rt)
