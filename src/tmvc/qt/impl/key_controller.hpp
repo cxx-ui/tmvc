@@ -224,18 +224,13 @@ bool process_edit_key_event(Controller & controller,
     default:
         // inserting single character if its printable
         if (!ctrl && !meta && !event->text().isEmpty()) {
-            auto chars = qstring_to_chars<char_t>(event->text());
-            if (std::ranges::size(chars) == 1) {
-                std::locale loc("");
-                auto ch = *std::ranges::begin(chars);
-                auto ch_value = [&] {
-                    if constexpr (requires { ch.character(); }) {
-                        return ch.character();
-                    } else {
-                        return ch;
-                    }
-                }();
-                if (std::isprint(ch_value, loc)) {
+            const auto event_text = event->text();
+            const auto code_points = event_text.toUcs4();
+            if (code_points.size() == 1 && QChar::isPrint(code_points.front())) {
+                auto chars = qstring_to_chars<char_t>(event_text);
+                if (std::ranges::size(chars) == 1) {
+                    auto ch = *std::ranges::begin(chars);
+
                     controller.do_char(ch);
                     event->accept();
                     return true;
