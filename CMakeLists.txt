@@ -12,11 +12,6 @@ include(CTest)
 cmake_policy(SET CMP0167 NEW)
 find_package(Boost 1.70 REQUIRED)
 
-if(BUILD_TESTING)
-    find_package(Boost 1.70 REQUIRED COMPONENTS unit_test_framework)
-endif()
-
-
 add_subdirectory(src)
 
 if("${TMVC_BUILD_DOC}")
