@@ -20,7 +20,6 @@
 #include "../../text_model.hpp"
 #include <optional>
 #include <QApplication>
-#include <QDebug>
 #include <QFontMetrics>
 #include <QKeySequence>
 #include <QPlainTextEdit>
@@ -192,17 +191,6 @@ protected:
     /// Handles key press event in text view
     void keyPressEvent(QKeyEvent * event) override {
         if constexpr (!qt_std_controller<Controller>) {
-            qDebug() << "key:" << event->key()
-                     << "nativeVirtualKey:" << event->nativeVirtualKey()
-                     << "nativeScanCode:" << event->nativeScanCode()
-                     << "nativeModifiers:" << event->nativeModifiers()
-                     << "text:" << event->text()
-                     << "modifiers:" << event->modifiers()
-                     << "matches Copy:" << event->matches(QKeySequence::Copy)
-                     << "matches Cut:" << event->matches(QKeySequence::Cut)
-                     << "matches Paste:" << event->matches(QKeySequence::Paste)
-                     << "matches SelectAll:" << event->matches(QKeySequence::SelectAll);
-
             // detecting suggested move position based on standard key sequences
             std::optional<position> pos = std::nullopt;
             if (event->matches(QKeySequence::MoveToPreviousLine) ||
