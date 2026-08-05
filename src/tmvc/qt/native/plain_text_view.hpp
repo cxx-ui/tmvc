@@ -10,6 +10,7 @@
 #pragma once
 
 #include "text_view_impl.hpp"
+#include <QPlainTextEdit>
 
 
 namespace tmvc::qt::native {
@@ -21,7 +22,7 @@ template <
     qt_selection_model<Model> SelectionModel,
     qt_selection_controller_for<Model> Controller
 >
-using plain_text_view = text_view_impl<QTextEdit, Model, SelectionModel, Controller>;
+using plain_text_view = text_view_impl<QPlainTextEdit, Model, SelectionModel, Controller>;
 
 
 }
