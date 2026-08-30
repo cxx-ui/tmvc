@@ -533,17 +533,19 @@ public:
             return;
         }
 
-        auto is_alnum = char_is_alnum_at(text_mdl_, pos);
+        auto is_word = is_word_char_at(pos);
         auto is_space = char_is_space_at(text_mdl_, pos);
 
-        auto same_kind = [this, is_alnum, is_space](const position & p) {
-            if (is_alnum) {
-                return char_is_alnum_at(text_mdl_, p);
+        auto same_kind = [this, is_word, is_space](const position & p) {
+            if (is_word) {
+                return is_word_char_at(p);
             }
+
             if (is_space) {
                 return char_is_space_at(text_mdl_, p);
             }
-            return !char_is_alnum_at(text_mdl_, p) && !char_is_space_at(text_mdl_, p);
+
+            return !is_word_char_at(p) && !char_is_space_at(text_mdl_, p);
         };
 
         auto start = pos;
@@ -736,19 +738,19 @@ private:
             }
         }
 
-        // if current symbol is alphabet or number then skipping all such symbols
-        if (char_is_alnum_at(mdl, *it)) {
+        // if current symbol is part of word then skipping all such symbols
+        if (is_word_char_at(*it)) {
             while (it != end) {
-                if (!char_is_alnum_at(mdl, *it)) {
+                if (!is_word_char_at(*it)) {
                     break;
                 }
 
                 ++it;
             }
         } else {
-            // skipping all non-alnum and non-space characters
+            // skipping all characters that are not part of word and not spaces
             while (it != end) {
-                if (char_is_alnum_at(mdl, *it) || char_is_space_at(mdl, *it)) {
+                if (is_word_char_at(*it) || char_is_space_at(mdl, *it)) {
                     break;
                 }
 

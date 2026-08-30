@@ -489,6 +489,36 @@ BOOST_AUTO_TEST_CASE(move_next_word_next_line) {
 }
 
 
+/// Tests moving to next word with underscore inside word
+BOOST_AUTO_TEST_CASE(move_next_word_underscore) {
+    std::wstring txt = L"foo_bar baz";
+    text.reset(txt);
+    controller.select_text({0, 0}, {0, 0});
+    controller.move_next_word(false, false, false);
+
+    BOOST_CHECK(string(text) == txt);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 8);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 8);
+}
+
+
+/// Tests moving to next word starting at underscore
+BOOST_AUTO_TEST_CASE(move_next_word_at_underscore) {
+    std::wstring txt = L"foo_bar baz";
+    text.reset(txt);
+    controller.select_text({0, 3}, {0, 3});
+    controller.move_next_word(false, false, false);
+
+    BOOST_CHECK(string(text) == txt);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 8);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 8);
+}
+
+
 /// Tests moving to previous word
 BOOST_AUTO_TEST_CASE(move_prev_word) {
     std::wstring txt = L"line of text ((*sd\n line2";
@@ -578,6 +608,35 @@ BOOST_AUTO_TEST_CASE(move_prev_word_prev_line) {
     BOOST_CHECK_EQUAL(selection.anchor_pos().column, 18);
 }
 
+/// Tests moving to previous word with underscore inside word
+BOOST_AUTO_TEST_CASE(move_prev_word_underscore) {
+    std::wstring txt = L"foo_bar baz";
+    text.reset(txt);
+    controller.select_text({0, 7}, {0, 7});
+    controller.move_prev_word(false, false, false);
+
+    BOOST_CHECK(string(text) == txt);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+}
+
+
+/// Tests moving to previous word starting at underscore
+BOOST_AUTO_TEST_CASE(move_prev_word_at_underscore) {
+    std::wstring txt = L"foo_bar baz";
+    text.reset(txt);
+    controller.select_text({0, 4}, {0, 4});
+    controller.move_prev_word(false, false, false);
+
+    BOOST_CHECK(string(text) == txt);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+}
+
 /// Tests selecting alnum token by mouse double click
 BOOST_AUTO_TEST_CASE(mouse_double_click_selects_word) {
     text.reset(L"first,  second!");
@@ -610,6 +669,28 @@ BOOST_AUTO_TEST_CASE(mouse_double_click_selects_non_word_token) {
     BOOST_CHECK_EQUAL(selection.anchor_pos().column, 15);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
     BOOST_CHECK_EQUAL(selection.pos().column, 15);
+}
+
+/// Tests selecting word with underscore by mouse double click
+BOOST_AUTO_TEST_CASE(mouse_double_click_selects_word_with_underscore) {
+    text.reset(L"foo_bar baz");
+
+    controller.do_mouse_double_click({0, 1}, false, false);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 7);
+}
+
+/// Tests selecting word by mouse double click on underscore
+BOOST_AUTO_TEST_CASE(mouse_double_click_on_underscore) {
+    text.reset(L"foo_bar baz");
+
+    controller.do_mouse_double_click({0, 3}, false, false);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 7);
 }
 
 /// Tests selecting all text
