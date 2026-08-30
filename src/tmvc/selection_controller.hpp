@@ -10,9 +10,13 @@
 #pragma once
 
 #include "context_menu.hpp"
+#include "find_options.hpp"
 #include "position.hpp"
+#include "range.hpp"
 #include "text_model.hpp"
+#include "impl/utils.hpp"
 #include <optional>
+#include <vector>
 
 
 namespace tmvc {
@@ -120,7 +124,8 @@ concept selection_controller_with_paging = selection_controller<Controller> && r
 
 /// Represents selection controller with text selection method
 template <typename Controller>
-concept selection_controller_with_select_text = selection_controller<Controller> && requires(Controller & cntrl) {
+concept selection_controller_with_select_text = selection_controller<Controller> &&
+                                                requires(Controller & cntrl) {
     // Selects text
     cntrl.select_text(std::declval<position>(), std::declval<position>());
 };
@@ -143,8 +148,8 @@ concept selection_controller_with_select_text_for =
 
 /// Represents selection controller with word navigation
 template <typename Controller>
-concept selection_controller_with_word_navigation =
-    selection_controller<Controller> && requires(Controller & cntrl) {
+concept selection_controller_with_word_navigation = selection_controller<Controller> &&
+                                                    requires(Controller & cntrl) {
     // Moves cursor to next word
     cntrl.move_next_word(true, false, false);
 
@@ -155,8 +160,8 @@ concept selection_controller_with_word_navigation =
 
 /// Represents selection controller with line navigation
 template <typename Controller>
-concept selection_controller_with_line_navigation =
-    selection_controller<Controller> && requires(Controller & cntrl) {
+concept selection_controller_with_line_navigation = selection_controller<Controller> &&
+                                                    requires(Controller & cntrl) {
     // Moves cursor to start of line
     cntrl.move_line_start(true, false, false, std::declval<std::optional<position>>());
 
@@ -173,14 +178,51 @@ concept selection_controller_with_line_navigation =
 
 /// Represents selection controller with block navigation
 template <typename Controller>
-concept selection_controller_with_block_navigation =
-    selection_controller<Controller> && requires(Controller & cntrl) {
+concept selection_controller_with_block_navigation = selection_controller<Controller> &&
+                                                     requires(Controller & cntrl) {
     // Moves cursor to start of block
     cntrl.move_block_start(true, false, false);
 
     // Moves cursor to end of block
     cntrl.move_block_end(true, false, false);
 };
+
+
+/// Represents selection controller with text search
+template <typename Controller>
+concept selection_controller_with_find = selection_controller<Controller> &&
+                                         requires(Controller & cntrl) {
+    // Searches for specified text and returns ranges of all found matches
+    { cntrl.find(std::declval<std::vector<typename Controller::char_t>>(),
+                 std::declval<find_options>()) } -> std::convertible_to<const std::vector<range> &>;
+
+    // Returns ranges of matches found by the last search
+    { cntrl.find_results() } -> std::convertible_to<const std::vector<range> &>;
+
+    // Selects next match after current selection
+    cntrl.find_next();
+
+    // Selects previous match before current selection
+    cntrl.find_prev();
+};
+
+
+/// Finds text in selection controller with standard characters
+template <selection_controller_with_find Controller>
+decltype(auto) find(Controller & controller,
+                    const text_character_value_string<typename Controller::char_t> & str,
+                    const find_options & options) {
+    using char_t = typename Controller::char_t;
+
+    // creating characters of controller character type from character values
+    std::vector<char_t> chars;
+    chars.reserve(str.size());
+    for (auto ch : str) {
+        chars.push_back(impl::make_char<char_t>(ch));
+    }
+
+    return controller.find(chars, options);
+}
 
 
 }

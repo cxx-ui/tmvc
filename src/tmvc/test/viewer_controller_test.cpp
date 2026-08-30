@@ -623,6 +623,331 @@ BOOST_AUTO_TEST_CASE(select_all) {
     BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
 }
 
+/// Tests searching for text ignoring case
+BOOST_AUTO_TEST_CASE(find_ignore_case) {
+    text.reset(L"Foo bar\nfoo FOO");
+
+    auto & results = controller.find({L'f', L'o', L'o'},
+                                     {char_match_mode::char_value_ignore_case, false});
+    BOOST_REQUIRE_EQUAL(results.size(), 3);
+
+    BOOST_CHECK_EQUAL(results[0].start.line, 0);
+    BOOST_CHECK_EQUAL(results[0].start.column, 0);
+    BOOST_CHECK_EQUAL(results[0].end.line, 0);
+    BOOST_CHECK_EQUAL(results[0].end.column, 3);
+
+    BOOST_CHECK_EQUAL(results[1].start.line, 1);
+    BOOST_CHECK_EQUAL(results[1].start.column, 0);
+    BOOST_CHECK_EQUAL(results[1].end.line, 1);
+    BOOST_CHECK_EQUAL(results[1].end.column, 3);
+
+    BOOST_CHECK_EQUAL(results[2].start.line, 1);
+    BOOST_CHECK_EQUAL(results[2].start.column, 4);
+    BOOST_CHECK_EQUAL(results[2].end.line, 1);
+    BOOST_CHECK_EQUAL(results[2].end.column, 7);
+}
+
+/// Tests searching for text taking case into account
+BOOST_AUTO_TEST_CASE(find_char_value) {
+    text.reset(L"Foo bar\nfoo FOO");
+
+    auto & results = controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    BOOST_REQUIRE_EQUAL(results.size(), 1);
+
+    BOOST_CHECK_EQUAL(results[0].start.line, 1);
+    BOOST_CHECK_EQUAL(results[0].start.column, 0);
+    BOOST_CHECK_EQUAL(results[0].end.line, 1);
+    BOOST_CHECK_EQUAL(results[0].end.column, 3);
+}
+
+/// Tests searching for whole words only
+BOOST_AUTO_TEST_CASE(find_match_word) {
+    text.reset(L"foo foobar foo_bar (foo)");
+
+    auto & results = controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, true});
+    BOOST_REQUIRE_EQUAL(results.size(), 2);
+
+    BOOST_CHECK_EQUAL(results[0].start.column, 0);
+    BOOST_CHECK_EQUAL(results[0].end.column, 3);
+
+    BOOST_CHECK_EQUAL(results[1].start.column, 20);
+    BOOST_CHECK_EQUAL(results[1].end.column, 23);
+}
+
+/// Tests searching for text placed in several lines
+BOOST_AUTO_TEST_CASE(find_multiline_text) {
+    text.reset(L"first\nsecond");
+
+    auto & results = controller.find({L't', L'\n', L's'}, {char_match_mode::char_value, false});
+    BOOST_REQUIRE_EQUAL(results.size(), 1);
+
+    BOOST_CHECK_EQUAL(results[0].start.line, 0);
+    BOOST_CHECK_EQUAL(results[0].start.column, 4);
+    BOOST_CHECK_EQUAL(results[0].end.line, 1);
+    BOOST_CHECK_EQUAL(results[0].end.column, 1);
+}
+
+/// Tests that found matches don't overlap
+BOOST_AUTO_TEST_CASE(find_not_overlapping_matches) {
+    text.reset(L"aaaa");
+
+    auto & results = controller.find({L'a', L'a'}, {char_match_mode::char_value, false});
+    BOOST_REQUIRE_EQUAL(results.size(), 2);
+
+    BOOST_CHECK_EQUAL(results[0].start.column, 0);
+    BOOST_CHECK_EQUAL(results[0].end.column, 2);
+
+    BOOST_CHECK_EQUAL(results[1].start.column, 2);
+    BOOST_CHECK_EQUAL(results[1].end.column, 4);
+}
+
+/// Tests searching for text that is not in document
+BOOST_AUTO_TEST_CASE(find_no_matches) {
+    text.reset(L"first line\nsecond line");
+
+    auto & results = controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    BOOST_CHECK(results.empty());
+}
+
+/// Tests searching for empty text
+BOOST_AUTO_TEST_CASE(find_empty_text) {
+    text.reset(L"first line");
+
+    auto & results = controller.find({}, {char_match_mode::char_value, false});
+    BOOST_CHECK(results.empty());
+}
+
+/// Tests getting results of the last search
+BOOST_AUTO_TEST_CASE(find_results) {
+    text.reset(L"first line\nsecond line");
+
+    controller.find({L'l', L'i', L'n', L'e'}, {char_match_mode::char_value, false});
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 2);
+
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.line, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.column, 6);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.column, 7);
+
+    // checking that results of previous search are cleared
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    BOOST_CHECK(controller.find_results().empty());
+}
+
+/// Tests selecting next find matches
+BOOST_AUTO_TEST_CASE(find_next) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({0, 0}, {0, 0});
+
+    controller.find_next();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 3);
+
+    controller.find_next();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.pos().column, 3);
+
+    controller.find_next();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 8);
+    BOOST_CHECK_EQUAL(selection.pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.pos().column, 11);
+}
+
+/// Tests selecting next find match when there are no matches after selection
+BOOST_AUTO_TEST_CASE(find_next_continues_from_first_match) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({1, 8}, {1, 11});
+
+    controller.find_next();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 3);
+}
+
+/// Tests selecting next find match for position inside text
+BOOST_AUTO_TEST_CASE(find_next_from_text_position) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({1, 5}, {1, 5});
+
+    controller.find_next();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 8);
+    BOOST_CHECK_EQUAL(selection.pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.pos().column, 11);
+}
+
+/// Tests selecting previous find matches
+BOOST_AUTO_TEST_CASE(find_prev) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({1, 8}, {1, 11});
+
+    controller.find_prev();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.pos().column, 3);
+
+    controller.find_prev();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 3);
+}
+
+/// Tests selecting previous find match when there are no matches before selection
+BOOST_AUTO_TEST_CASE(find_prev_continues_from_last_match) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({0, 0}, {0, 3});
+
+    controller.find_prev();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 8);
+    BOOST_CHECK_EQUAL(selection.pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.pos().column, 11);
+}
+
+/// Tests selecting previous find match for position inside text
+BOOST_AUTO_TEST_CASE(find_prev_from_text_position) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({1, 5}, {1, 5});
+
+    controller.find_prev();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.pos().column, 3);
+}
+
+/// Tests moving find matches after inserting characters
+BOOST_AUTO_TEST_CASE(find_results_updated_after_insert) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+
+    text.insert({0, 0}, std::wstring{L"xy"});
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 3);
+
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.line, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.column, 2);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].end.line, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].end.column, 5);
+
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.column, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[2].start.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[2].start.column, 8);
+}
+
+/// Tests moving find matches after inserting characters in previous line
+BOOST_AUTO_TEST_CASE(find_results_updated_after_inserting_line) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+
+    text.insert({0, 7}, std::wstring{L"\nnew"});
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 3);
+
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.line, 2);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.column, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[2].start.line, 2);
+    BOOST_CHECK_EQUAL(controller.find_results()[2].start.column, 8);
+}
+
+/// Tests removing find match broken by inserted characters
+BOOST_AUTO_TEST_CASE(find_results_removed_after_insert_inside_match) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+
+    text.insert({1, 1}, std::wstring{L"xy"});
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 2);
+
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.line, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.column, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.column, 10);
+}
+
+/// Tests moving find matches after erasing characters
+BOOST_AUTO_TEST_CASE(find_results_updated_after_erase) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+
+    text.erase({{1, 3}, {1, 8}});
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 3);
+
+    BOOST_CHECK_EQUAL(controller.find_results()[2].start.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[2].start.column, 3);
+    BOOST_CHECK_EQUAL(controller.find_results()[2].end.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[2].end.column, 6);
+}
+
+/// Tests removing find match intersecting erased characters
+BOOST_AUTO_TEST_CASE(find_results_removed_after_erase_of_match) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+
+    text.erase({{0, 1}, {0, 4}});
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 2);
+
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.column, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.column, 8);
+}
+
+/// Tests removing find match intersecting replaced characters
+BOOST_AUTO_TEST_CASE(find_results_removed_after_replace) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+
+    text.replace({1, 1}, std::wstring{L"X"});
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 2);
+
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.line, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.column, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.column, 8);
+}
+
+/// Tests that find matches are kept when replacing characters outside of them
+BOOST_AUTO_TEST_CASE(find_results_kept_after_replace_outside_matches) {
+    text.reset(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+
+    text.replace({1, 4}, std::wstring{L"X"});
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 3);
+
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[1].start.column, 0);
+    BOOST_CHECK_EQUAL(controller.find_results()[2].start.line, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[2].start.column, 8);
+}
+
+/// Tests that selection is not changed when there are no find matches
+BOOST_AUTO_TEST_CASE(find_next_prev_without_matches) {
+    text.reset(L"first line\nsecond line");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({0, 2}, {0, 4});
+
+    controller.find_next();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 2);
+    BOOST_CHECK_EQUAL(selection.pos().column, 4);
+
+    controller.find_prev();
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 2);
+    BOOST_CHECK_EQUAL(selection.pos().column, 4);
+}
+
 
 
 

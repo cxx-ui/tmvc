@@ -81,4 +81,51 @@ concept edit_controller_for =
     edit_controller<Controller>;
 
 
+/// Represents edit controller with replacement of found text
+template <typename Controller>
+concept edit_controller_with_replace = edit_controller<Controller> &&
+                                       selection_controller_with_find<Controller> &&
+                                       requires(Controller & cntrl) {
+    // Replaces current find match with specified characters
+    cntrl.replace(std::declval<std::vector<typename Controller::char_t>>());
+
+    // Replaces all find matches with specified characters
+    cntrl.replace_all(std::declval<std::vector<typename Controller::char_t>>());
+};
+
+
+/// Replaces current find match in edit controller with standard characters
+template <edit_controller_with_replace Controller>
+void replace(Controller & controller,
+             const text_character_value_string<typename Controller::char_t> & str) {
+    using char_t = typename Controller::char_t;
+
+    // creating characters of controller character type from character values
+    std::vector<char_t> chars;
+    chars.reserve(str.size());
+    for (auto ch : str) {
+        chars.push_back(impl::make_char<char_t>(ch));
+    }
+
+    controller.replace(chars);
+}
+
+
+/// Replaces all find matches in edit controller with standard characters
+template <edit_controller_with_replace Controller>
+void replace_all(Controller & controller,
+                 const text_character_value_string<typename Controller::char_t> & str) {
+    using char_t = typename Controller::char_t;
+
+    // creating characters of controller character type from character values
+    std::vector<char_t> chars;
+    chars.reserve(str.size());
+    for (auto ch : str) {
+        chars.push_back(impl::make_char<char_t>(ch));
+    }
+
+    controller.replace_all(chars);
+}
+
+
 }

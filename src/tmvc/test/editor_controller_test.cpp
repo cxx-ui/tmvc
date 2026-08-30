@@ -1068,6 +1068,140 @@ BOOST_AUTO_TEST_CASE(delete_char_reset_up_down) {
 }
 
 
+/// Tests selecting find match when current selection is not a match
+BOOST_AUTO_TEST_CASE(replace_selects_match_for_other_selection) {
+    controller.set_text(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({0, 0}, {0, 0});
+
+    controller.replace({L'X', L'Y'});
+
+    BOOST_CHECK(string(text) == L"foo bar\nfoo baz foo");
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 3);
+}
+
+/// Tests replacing current find match and selecting next match
+BOOST_AUTO_TEST_CASE(replace_current_match) {
+    controller.set_text(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({0, 0}, {0, 3});
+
+    controller.replace({L'X', L'Y'});
+
+    BOOST_CHECK(string(text) == L"XY bar\nfoo baz foo");
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 2);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.pos().line, 1);
+    BOOST_CHECK_EQUAL(selection.pos().column, 3);
+}
+
+/// Tests replacing all find matches one by one
+BOOST_AUTO_TEST_CASE(replace_all_matches_one_by_one) {
+    controller.set_text(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({0, 0}, {0, 3});
+
+    controller.replace({L'X', L'Y'});
+    controller.replace({L'X', L'Y'});
+    controller.replace({L'X', L'Y'});
+
+    BOOST_CHECK(string(text) == L"XY bar\nXY baz XY");
+    BOOST_CHECK(controller.find_results().empty());
+}
+
+/// Tests undo of replacing current find match
+BOOST_AUTO_TEST_CASE(replace_undo) {
+    controller.set_text(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({0, 0}, {0, 3});
+
+    controller.replace({L'X', L'Y'});
+    BOOST_CHECK(string(text) == L"XY bar\nfoo baz foo");
+
+    controller.undo();
+    BOOST_CHECK(string(text) == L"foo bar\nfoo baz foo");
+    BOOST_CHECK(!controller.can_undo());
+}
+
+/// Tests replacing all find matches
+BOOST_AUTO_TEST_CASE(replace_all) {
+    controller.set_text(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+
+    controller.replace_all({L'Q'});
+
+    BOOST_CHECK(string(text) == L"Q bar\nQ baz Q");
+    BOOST_CHECK(controller.find_results().empty());
+}
+
+/// Tests undo and redo of replacing all find matches
+BOOST_AUTO_TEST_CASE(replace_all_undo_redo) {
+    controller.set_text(L"foo bar\nfoo baz foo");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+
+    controller.replace_all({L'Q'});
+    BOOST_CHECK(string(text) == L"Q bar\nQ baz Q");
+
+    controller.undo();
+    BOOST_CHECK(string(text) == L"foo bar\nfoo baz foo");
+    BOOST_CHECK(!controller.can_undo());
+
+    controller.redo();
+    BOOST_CHECK(string(text) == L"Q bar\nQ baz Q");
+}
+
+/// Tests that match inside replacement text is added to find results
+BOOST_AUTO_TEST_CASE(replace_finds_match_in_replacement) {
+    controller.set_text(L"foo bar");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({0, 0}, {0, 3});
+
+    controller.replace({L'x', L'f', L'o', L'o'});
+
+    BOOST_CHECK(string(text) == L"xfoo bar");
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.column, 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].end.column, 4);
+    BOOST_CHECK(characters_str(text, controller.find_results()[0]) == L"foo");
+}
+
+/// Tests that find match is added to find results when its text is typed character by character
+BOOST_AUTO_TEST_CASE(find_results_updated_after_typing_find_text) {
+    controller.set_text(L"bar ");
+    controller.find({L'f', L'o', L'o'}, {char_match_mode::char_value, false});
+    controller.select_text({0, 4}, {0, 4});
+    BOOST_CHECK(controller.find_results().empty());
+
+    controller.do_char(L'f');
+    BOOST_CHECK(controller.find_results().empty());
+
+    controller.do_char(L'o');
+    BOOST_CHECK(controller.find_results().empty());
+
+    controller.do_char(L'o');
+    BOOST_CHECK(string(text) == L"bar foo");
+    BOOST_REQUIRE_EQUAL(controller.find_results().size(), 1);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].start.column, 4);
+    BOOST_CHECK_EQUAL(controller.find_results()[0].end.column, 7);
+    BOOST_CHECK(characters_str(text, controller.find_results()[0]) == L"foo");
+}
+
+/// Tests replacing all find matches when there are no matches
+BOOST_AUTO_TEST_CASE(replace_all_without_matches) {
+    controller.set_text(L"foo bar\nfoo baz foo");
+    controller.find({L'z', L'z', L'z'}, {char_match_mode::char_value, false});
+
+    controller.replace_all({L'Q'});
+
+    BOOST_CHECK(string(text) == L"foo bar\nfoo baz foo");
+    BOOST_CHECK(!controller.can_undo());
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

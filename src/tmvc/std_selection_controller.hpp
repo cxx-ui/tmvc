@@ -16,6 +16,7 @@
 #include "std_paging_controller.hpp"
 #include "text_model.hpp"
 #include "impl/utils.hpp"
+#include <algorithm>
 #include <optional>
 
 
@@ -48,21 +49,24 @@ public:
     /// Type of character
     using char_t = typename TextModel::char_t;
 
+    /// Type of underlying character code
+    using char_value_t = impl::char_value_t<char_t>;
+
     /// Constructs controller with specified references to text model and selection model
     std_selection_controller(const TextModel & text_mdl):
     text_mdl_{text_mdl} {
-        // listening for text model changes and resetting up/down saved column
+        // listening for text model changes
 
         after_inserted_con_ = text_mdl.after_inserted.connect([this](auto && ...) {
-            reset_up_down_saved_column();
+            on_text_changed();
         });
 
         after_erased_con_ = text_mdl.after_erased.connect([this](auto && ...) {
-            reset_up_down_saved_column();
+            on_text_changed();
         });
 
         after_replaced_con_ = text_mdl.after_replaced.connect([this](auto && ...) {
-            reset_up_down_saved_column();
+            on_text_changed();
         });
     }
 
@@ -561,11 +565,97 @@ public:
         set_pos_keep_anchor(end);
     }
 
+
+    ////////////////////////////////////////////////////////////
+    // Text search
+
+    /// Searches for specified text in text model and returns ranges of all found matches
+    const std::vector<range> & find(const std::vector<char_t> & find_chars,
+                                    const find_options & options) {
+        find_chars_ = find_chars;
+        find_options_ = options;
+        update_find_results();
+        return find_results_;
+    }
+
+
+    /// Returns ranges of matches found by the last search
+    const std::vector<range> & find_results() const { return find_results_; }
+
+
+    /// Selects next find match after current selection
+    void find_next() {
+        if (find_results_.empty()) {
+            return;
+        }
+
+        // searching for next find match after current selection
+        auto sel = impl::selected_range(derived_anchor_pos(), derived_pos());
+        auto it = std::find_if(find_results_.begin(), find_results_.end(), [&sel](auto && r) {
+            return r.start >= sel.end;
+        });
+
+        // continuing from the first find match when there are no matches after selection
+        if (it == find_results_.end()) {
+            it = find_results_.begin();
+        }
+
+        select_text(it->start, it->end);
+    }
+
+
+    /// Selects previous find match before current selection
+    void find_prev() {
+        if (find_results_.empty()) {
+            return;
+        }
+
+        // searching for previous find match before current selection
+        auto sel = impl::selected_range(derived_anchor_pos(), derived_pos());
+        auto it = std::find_if(find_results_.rbegin(), find_results_.rend(), [&sel](auto && r) {
+            return r.end <= sel.start;
+        });
+
+        // continuing from the last find match when there are no matches before selection
+        if (it == find_results_.rend()) {
+            it = find_results_.rbegin();
+        }
+
+        select_text(it->start, it->end);
+    }
+
+
 protected:
     /// Resets saved number of column when moving up/down
     void reset_up_down_saved_column() {
         up_down_saved_column_ = 0;
     }
+
+
+    /// Searches for the text of the last search and updates find results
+    void update_find_results() {
+        find_results_.clear();
+
+        if (find_chars_.empty()) {
+            return;
+        }
+
+        // searching for matches starting from all positions in text
+        auto text_end = end_pos(text_mdl_);
+        auto pos = begin_pos(text_mdl_);
+        while (pos != text_end) {
+            auto match_end = match_at(pos, find_chars_, find_options_);
+            if (match_end) {
+                // continuing to search after found match
+                find_results_.push_back({pos, *match_end});
+                pos = *match_end;
+            } else {
+                pos = next_pos(text_mdl_, pos);
+            }
+        }
+    }
+
+
 
 
 private:
@@ -681,11 +771,121 @@ private:
     }
 
 
+    /// Called after text in model changed
+    void on_text_changed() {
+        reset_up_down_saved_column();
+        update_find_results();
+    }
+
+
+    /// Returns end position of match starting at specified position, or empty
+    /// value if text at specified position doesn't match
+    std::optional<position> match_at(const position & pos,
+                                     const std::vector<char_t> & find_chars,
+                                     const find_options & options) const {
+        auto text_end = end_pos(text_mdl_);
+        auto cur = pos;
+
+        for (auto && ch : find_chars) {
+            if (cur == text_end || !chars_equal(char_at_pos(cur), ch, options.match_mode)) {
+                return std::nullopt;
+            }
+
+            cur = next_pos(text_mdl_, cur);
+        }
+
+        // checking that match is not surrounded by word characters
+        if (options.match_word) {
+            if (pos != begin_pos(text_mdl_) && is_word_char_at(prev_pos(text_mdl_, pos))) {
+                return std::nullopt;
+            }
+
+            if (cur != text_end && is_word_char_at(cur)) {
+                return std::nullopt;
+            }
+        }
+
+        return cur;
+    }
+
+
+    /// Returns character at specified position. Returns newline character
+    /// for position at the end of line.
+    char_t char_at_pos(const position & pos) const {
+        if (pos.column == text_mdl_.line_size(pos.line)) {
+            return impl::make_char<char_t>('\n');
+        }
+
+        return text_mdl_.char_at(pos);
+    }
+
+
+    /// Returns true if character at specified position can be part of word
+    bool is_word_char_at(const position & pos) const {
+        // end of line is never part of word
+        if (pos.column == text_mdl_.line_size(pos.line)) {
+            return false;
+        }
+
+        return char_is_alnum_at(text_mdl_, pos) ||
+               char_value(text_mdl_.char_at(pos)) == static_cast<char_value_t>('_');
+    }
+
+
+    /// Returns true if characters are equal in specified character match mode
+    static bool chars_equal(const char_t & ch1, const char_t & ch2, char_match_mode mode) {
+        switch (mode) {
+        case char_match_mode::whole_char:
+            return ch1 == ch2;
+
+        case char_match_mode::char_value:
+            return char_value(ch1) == char_value(ch2);
+
+        case char_match_mode::char_value_ignore_case:
+            return char_to_lower(char_value(ch1)) == char_to_lower(char_value(ch2));
+        }
+
+        assert(false && "invalid character match mode");
+        return false;
+    }
+
+
+    /// Returns code of specified character
+    static char_value_t char_value(const char_t & ch) {
+        if constexpr (std_character<char_t>) {
+            return ch;
+        } else {
+            return ch.character();
+        }
+    }
+
+
+    /// Returns lower case for specified character code
+    static char_value_t char_to_lower(char_value_t code) {
+        if constexpr (std::is_same_v<char_value_t, wchar_t>) {
+            return static_cast<char_value_t>(std::towlower(code));
+        } else if constexpr (std::is_same_v<char_value_t, char>) {
+            return static_cast<char_value_t>(std::tolower(static_cast<unsigned char>(code)));
+        } else {
+            // for now, cast all other character types to char. This should
+            // work in most cases even for multibyte unicode string.
+            return static_cast<char_value_t>(
+                std::tolower(static_cast<unsigned char>(static_cast<char>(code))));
+        }
+    }
+
+
     const TextModel & text_mdl_;    ///< Reference to text model
 
     /// Saved original column number that current position had before starting
     /// move up or down in document
     size_t up_down_saved_column_ = 0;
+
+    std::vector<char_t> find_chars_;     ///< Text of the last search
+    find_options find_options_;          ///< Options of the last search
+
+    /// Ranges of matches found by the last search
+    std::vector<range> find_results_;
 
     // connections to model signals
     scoped_signal_connection after_inserted_con_;

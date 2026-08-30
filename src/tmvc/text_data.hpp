@@ -26,10 +26,32 @@ namespace tmvc {
 template <typename Char>
 concept text_character = std_character<Char> ||
 requires(const Char & c) {
-    { c.character() } -> std_character;
+    typename Char::value_t;
+    requires std_character<typename Char::value_t>;
+
+    { c.character() } -> std::convertible_to<typename Char::value_t>;
     { c == std::declval<char>() } -> std::convertible_to<bool>;
     { std::declval<char>() == c } -> std::convertible_to<bool>;
 };
+
+
+template <text_character Char>
+struct text_character_value_impl {
+    using type = typename Char::value_t;
+};
+
+template <std_character Char>
+struct text_character_value_impl<Char> {
+    using type = Char;
+};
+
+/// Represents character value
+template <text_character Char>
+using text_character_value = typename text_character_value_impl<Char>::type;
+
+/// Represents character value string
+template <text_character Char>
+using text_character_value_string = std::basic_string<text_character_value<Char>>;
 
 
 /// Represents read only text data
@@ -50,6 +72,12 @@ concept text_data = requires(const TextData & mdl) {
 };
 
 
+/// Alias for type of std string for characters in text model
+template <text_data TextData>
+requires std_character<typename TextData::char_t>
+using text_data_string = std::basic_string<typename TextData::char_t>;
+
+
 /// Text data with known maximum line size
 template <typename TextData>
 concept text_data_with_max_line_size = text_data<TextData> && requires (const TextData & mdl) {
@@ -59,12 +87,6 @@ concept text_data_with_max_line_size = text_data<TextData> && requires (const Te
     /// The signal is emitted when maximum line size in text model is changed
     { mdl.max_line_size_changed } -> std::convertible_to<signal<void ()> &>;
 };
-
-
-/// Alias for type of std string for characters in text model
-template <text_data TextData>
-requires std_character<typename TextData::char_t>
-using text_data_string = std::basic_string<typename TextData::char_t>;
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -143,6 +143,7 @@ template <std_character Char, typename Format = text_format>
 class basic_formatted_char {
 public:
     using char_t = Char;
+    using value_t = char_t;
     using format_t = Format;
 
     /// Constructs formatted character with default values

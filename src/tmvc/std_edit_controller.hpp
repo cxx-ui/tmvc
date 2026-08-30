@@ -144,6 +144,17 @@ public:
 
 
     ////////////////////////////////////////////////////////////
+    // Text search
+
+    /// Replaces current find match with specified characters and selects next match.
+    /// Selects next match without replacing text if current selection is not a find match.
+    void replace(const chars_t & chars);
+
+    /// Replaces all find matches with specified characters
+    void replace_all(const chars_t & chars);
+
+
+    ////////////////////////////////////////////////////////////
     // Context menu
 
     /// Creates context menu

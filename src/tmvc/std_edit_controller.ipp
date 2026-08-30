@@ -649,6 +649,45 @@ void std_edit_controller<Derived, TextModel>::redo() {
 
 
 template <typename Derived, editable_text_model TextModel>
+void std_edit_controller<Derived, TextModel>::replace(const chars_t & chars) {
+    // checking that current selection is a find match
+    auto sel = selected_range();
+    auto & results = this->find_results();
+    if (std::find(results.begin(), results.end(), sel) == results.end()) {
+        // selecting match that should be replaced by the next replace action
+        this->find_next();
+        return;
+    }
+
+    // replacing text of current find match
+    {
+        transaction trans{text_mdl_, history()};
+        trans.erase_characters(sel);
+        auto ins_range = trans.insert_characters(sel.start, chars);
+        derived_set_pos_move_anchor(ins_range.end);
+    }
+
+    this->find_next();
+}
+
+
+template <typename Derived, editable_text_model TextModel>
+void std_edit_controller<Derived, TextModel>::replace_all(const chars_t & chars) {
+    // copying find matches, find results are updated while replacing text
+    auto matches = this->find_results();
+
+    transaction trans{text_mdl_, history()};
+
+    // replacing matches starting from the last one to keep positions
+    // of remaining matches valid
+    for (auto && match : matches | std::views::reverse) {
+        trans.erase_characters(match);
+        trans.insert_characters(match.start, chars);
+    }
+}
+
+
+template <typename Derived, editable_text_model TextModel>
 void std_edit_controller<Derived, TextModel>::do_before_save() {
     // removing all characters from current line if it contains only spaces
     remove_all_spaces_current_line();
