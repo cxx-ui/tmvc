@@ -90,52 +90,50 @@ struct mock_selection_controller {
 
 
 struct mock_nav_controller: public mock_selection_controller {
-    struct nav3_args {
-        bool ctrl = false;  ///<
-        bool alt = false;   ///<
-        bool shift = false; ///<
+    struct line_nav_args {
+        bool keep_anchor = false;    ///<
         std::optional<position> pos; ///<
     };
 
-    std::optional<nav3_args> last_move_next_word;  ///<
-    std::optional<nav3_args> last_move_prev_word;  ///<
-    std::optional<nav3_args> last_move_line_start; ///<
-    std::optional<nav3_args> last_move_line_end;   ///<
-    std::optional<nav3_args> last_move_prev_line;  ///<
-    std::optional<nav3_args> last_move_next_line;  ///<
-    std::optional<nav3_args> last_move_block_start; ///<
-    std::optional<nav3_args> last_move_block_end;   ///<
+    std::optional<bool> last_move_next_word;           ///<
+    std::optional<bool> last_move_prev_word;           ///<
+    std::optional<line_nav_args> last_move_line_start; ///<
+    std::optional<line_nav_args> last_move_line_end;   ///<
+    std::optional<line_nav_args> last_move_prev_line;  ///<
+    std::optional<line_nav_args> last_move_next_line;  ///<
+    std::optional<bool> last_move_block_start;         ///<
+    std::optional<bool> last_move_block_end;           ///<
 
-    void move_next_word(bool c, bool a, bool s) {
-        last_move_next_word = {c, a, s, {}};
+    void move_next_word(bool keep_anchor) {
+        last_move_next_word = keep_anchor;
     }
 
-    void move_prev_word(bool c, bool a, bool s) {
-        last_move_prev_word = {c, a, s, {}};
+    void move_prev_word(bool keep_anchor) {
+        last_move_prev_word = keep_anchor;
     }
 
-    void move_line_start(bool c, bool a, bool s, const std::optional<position> & p) {
-        last_move_line_start = {c, a, s, p};
+    void move_line_start(bool keep_anchor, const std::optional<position> & p) {
+        last_move_line_start = {keep_anchor, p};
     }
 
-    void move_line_end(bool c, bool a, bool s, const std::optional<position> & p) {
-        last_move_line_end = {c, a, s, p};
+    void move_line_end(bool keep_anchor, const std::optional<position> & p) {
+        last_move_line_end = {keep_anchor, p};
     }
 
-    void move_prev_line(bool c, bool a, bool s, const std::optional<position> & p) {
-        last_move_prev_line = {c, a, s, p};
+    void move_prev_line(bool keep_anchor, const std::optional<position> & p) {
+        last_move_prev_line = {keep_anchor, p};
     }
 
-    void move_next_line(bool c, bool a, bool s, const std::optional<position> & p) {
-        last_move_next_line = {c, a, s, p};
+    void move_next_line(bool keep_anchor, const std::optional<position> & p) {
+        last_move_next_line = {keep_anchor, p};
     }
 
-    void move_block_start(bool c, bool a, bool s) {
-        last_move_block_start = {c, a, s, {}};
+    void move_block_start(bool keep_anchor) {
+        last_move_block_start = keep_anchor;
     }
 
-    void move_block_end(bool c, bool a, bool s) {
-        last_move_block_end = {c, a, s, {}};
+    void move_block_end(bool keep_anchor) {
+        last_move_block_end = keep_anchor;
     }
 };
 
@@ -456,63 +454,63 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(process_selection_key_event_nav_test, nav_suite_fixture)
 
-BOOST_AUTO_TEST_CASE(move_to_next_word_calls_move_next_word_with_shift_false) {
+BOOST_AUTO_TEST_CASE(move_to_next_word_calls_move_next_word_with_keep_anchor_false) {
     auto e = make_standard_key_event(QKeySequence::MoveToNextWord);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_next_word.has_value());
-    BOOST_CHECK(!ctrl.last_move_next_word->shift);
+    BOOST_CHECK(!*ctrl.last_move_next_word);
 }
 
-BOOST_AUTO_TEST_CASE(select_next_word_calls_move_next_word_with_shift_true) {
+BOOST_AUTO_TEST_CASE(select_next_word_calls_move_next_word_with_keep_anchor_true) {
     auto e = make_standard_key_event(QKeySequence::SelectNextWord);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_next_word.has_value());
-    BOOST_CHECK(ctrl.last_move_next_word->shift);
+    BOOST_CHECK(*ctrl.last_move_next_word);
 }
 
-BOOST_AUTO_TEST_CASE(move_to_previous_word_calls_move_prev_word_with_shift_false) {
+BOOST_AUTO_TEST_CASE(move_to_previous_word_calls_move_prev_word_with_keep_anchor_false) {
     auto e = make_standard_key_event(QKeySequence::MoveToPreviousWord);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_prev_word.has_value());
-    BOOST_CHECK(!ctrl.last_move_prev_word->shift);
+    BOOST_CHECK(!*ctrl.last_move_prev_word);
 }
 
-BOOST_AUTO_TEST_CASE(select_previous_word_calls_move_prev_word_with_shift_true) {
+BOOST_AUTO_TEST_CASE(select_previous_word_calls_move_prev_word_with_keep_anchor_true) {
     auto e = make_standard_key_event(QKeySequence::SelectPreviousWord);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_prev_word.has_value());
-    BOOST_CHECK(ctrl.last_move_prev_word->shift);
+    BOOST_CHECK(*ctrl.last_move_prev_word);
 }
 
-BOOST_AUTO_TEST_CASE(move_to_start_of_line_calls_move_line_start_with_shift_false) {
+BOOST_AUTO_TEST_CASE(move_to_start_of_line_calls_move_line_start_with_keep_anchor_false) {
     auto e = make_standard_key_event(QKeySequence::MoveToStartOfLine);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_line_start.has_value());
-    BOOST_CHECK(!ctrl.last_move_line_start->shift);
+    BOOST_CHECK(!ctrl.last_move_line_start->keep_anchor);
 }
 
-BOOST_AUTO_TEST_CASE(select_start_of_line_calls_move_line_start_with_shift_true) {
+BOOST_AUTO_TEST_CASE(select_start_of_line_calls_move_line_start_with_keep_anchor_true) {
     auto e = make_standard_key_event(QKeySequence::SelectStartOfLine);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_line_start.has_value());
-    BOOST_CHECK(ctrl.last_move_line_start->shift);
+    BOOST_CHECK(ctrl.last_move_line_start->keep_anchor);
 }
 
-BOOST_AUTO_TEST_CASE(move_to_end_of_line_calls_move_line_end_with_shift_false) {
+BOOST_AUTO_TEST_CASE(move_to_end_of_line_calls_move_line_end_with_keep_anchor_false) {
     auto e = make_standard_key_event(QKeySequence::MoveToEndOfLine);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_line_end.has_value());
-    BOOST_CHECK(!ctrl.last_move_line_end->shift);
+    BOOST_CHECK(!ctrl.last_move_line_end->keep_anchor);
 }
 
-BOOST_AUTO_TEST_CASE(select_end_of_line_calls_move_line_end_with_shift_true) {
+BOOST_AUTO_TEST_CASE(select_end_of_line_calls_move_line_end_with_keep_anchor_true) {
     auto e = make_standard_key_event(QKeySequence::SelectEndOfLine);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_line_end.has_value());
-    BOOST_CHECK(ctrl.last_move_line_end->shift);
+    BOOST_CHECK(ctrl.last_move_line_end->keep_anchor);
 }
 
-BOOST_AUTO_TEST_CASE(move_to_start_of_block_calls_move_block_start_with_shift_false) {
+BOOST_AUTO_TEST_CASE(move_to_start_of_block_calls_move_block_start_with_keep_anchor_false) {
     if (QKeySequence{QKeySequence::MoveToStartOfBlock}.isEmpty()) {
         return;
     }
@@ -520,10 +518,10 @@ BOOST_AUTO_TEST_CASE(move_to_start_of_block_calls_move_block_start_with_shift_fa
     auto e = make_standard_key_event(QKeySequence::MoveToStartOfBlock);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_block_start.has_value());
-    BOOST_CHECK(!ctrl.last_move_block_start->shift);
+    BOOST_CHECK(!*ctrl.last_move_block_start);
 }
 
-BOOST_AUTO_TEST_CASE(select_start_of_block_calls_move_block_start_with_shift_true) {
+BOOST_AUTO_TEST_CASE(select_start_of_block_calls_move_block_start_with_keep_anchor_true) {
     if (QKeySequence{QKeySequence::SelectStartOfBlock}.isEmpty()) {
         return;
     }
@@ -531,10 +529,10 @@ BOOST_AUTO_TEST_CASE(select_start_of_block_calls_move_block_start_with_shift_tru
     auto e = make_standard_key_event(QKeySequence::SelectStartOfBlock);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_block_start.has_value());
-    BOOST_CHECK(ctrl.last_move_block_start->shift);
+    BOOST_CHECK(*ctrl.last_move_block_start);
 }
 
-BOOST_AUTO_TEST_CASE(move_to_end_of_block_calls_move_block_end_with_shift_false) {
+BOOST_AUTO_TEST_CASE(move_to_end_of_block_calls_move_block_end_with_keep_anchor_false) {
     if (QKeySequence{QKeySequence::MoveToEndOfBlock}.isEmpty()) {
         return;
     }
@@ -542,10 +540,10 @@ BOOST_AUTO_TEST_CASE(move_to_end_of_block_calls_move_block_end_with_shift_false)
     auto e = make_standard_key_event(QKeySequence::MoveToEndOfBlock);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_block_end.has_value());
-    BOOST_CHECK(!ctrl.last_move_block_end->shift);
+    BOOST_CHECK(!*ctrl.last_move_block_end);
 }
 
-BOOST_AUTO_TEST_CASE(select_end_of_block_calls_move_block_end_with_shift_true) {
+BOOST_AUTO_TEST_CASE(select_end_of_block_calls_move_block_end_with_keep_anchor_true) {
     if (QKeySequence{QKeySequence::SelectEndOfBlock}.isEmpty()) {
         return;
     }
@@ -553,63 +551,63 @@ BOOST_AUTO_TEST_CASE(select_end_of_block_calls_move_block_end_with_shift_true) {
     auto e = make_standard_key_event(QKeySequence::SelectEndOfBlock);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_block_end.has_value());
-    BOOST_CHECK(ctrl.last_move_block_end->shift);
+    BOOST_CHECK(*ctrl.last_move_block_end);
 }
 
-BOOST_AUTO_TEST_CASE(alt_up_calls_move_block_start_with_shift_false) {
+BOOST_AUTO_TEST_CASE(alt_up_calls_move_block_start_with_keep_anchor_false) {
     QKeyEvent e{QEvent::KeyPress, Qt::Key_Up, Qt::AltModifier};
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_block_start.has_value());
-    BOOST_CHECK(!ctrl.last_move_block_start->shift);
+    BOOST_CHECK(!*ctrl.last_move_block_start);
 }
 
-BOOST_AUTO_TEST_CASE(shift_alt_up_calls_move_block_start_with_shift_true) {
+BOOST_AUTO_TEST_CASE(shift_alt_up_calls_move_block_start_with_keep_anchor_true) {
     QKeyEvent e{QEvent::KeyPress, Qt::Key_Up, Qt::AltModifier | Qt::ShiftModifier};
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_block_start.has_value());
-    BOOST_CHECK(ctrl.last_move_block_start->shift);
+    BOOST_CHECK(*ctrl.last_move_block_start);
 }
 
-BOOST_AUTO_TEST_CASE(alt_down_calls_move_block_end_with_shift_false) {
+BOOST_AUTO_TEST_CASE(alt_down_calls_move_block_end_with_keep_anchor_false) {
     QKeyEvent e{QEvent::KeyPress, Qt::Key_Down, Qt::AltModifier};
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_block_end.has_value());
-    BOOST_CHECK(!ctrl.last_move_block_end->shift);
+    BOOST_CHECK(!*ctrl.last_move_block_end);
 }
 
-BOOST_AUTO_TEST_CASE(shift_alt_down_calls_move_block_end_with_shift_true) {
+BOOST_AUTO_TEST_CASE(shift_alt_down_calls_move_block_end_with_keep_anchor_true) {
     QKeyEvent e{QEvent::KeyPress, Qt::Key_Down, Qt::AltModifier | Qt::ShiftModifier};
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_block_end.has_value());
-    BOOST_CHECK(ctrl.last_move_block_end->shift);
+    BOOST_CHECK(*ctrl.last_move_block_end);
 }
 
-BOOST_AUTO_TEST_CASE(move_to_previous_line_calls_move_prev_line_with_shift_false) {
+BOOST_AUTO_TEST_CASE(move_to_previous_line_calls_move_prev_line_with_keep_anchor_false) {
     auto e = make_standard_key_event(QKeySequence::MoveToPreviousLine);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_prev_line.has_value());
-    BOOST_CHECK(!ctrl.last_move_prev_line->shift);
+    BOOST_CHECK(!ctrl.last_move_prev_line->keep_anchor);
 }
 
-BOOST_AUTO_TEST_CASE(select_previous_line_calls_move_prev_line_with_shift_true) {
+BOOST_AUTO_TEST_CASE(select_previous_line_calls_move_prev_line_with_keep_anchor_true) {
     auto e = make_standard_key_event(QKeySequence::SelectPreviousLine);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_prev_line.has_value());
-    BOOST_CHECK(ctrl.last_move_prev_line->shift);
+    BOOST_CHECK(ctrl.last_move_prev_line->keep_anchor);
 }
 
-BOOST_AUTO_TEST_CASE(move_to_next_line_calls_move_next_line_with_shift_false) {
+BOOST_AUTO_TEST_CASE(move_to_next_line_calls_move_next_line_with_keep_anchor_false) {
     auto e = make_standard_key_event(QKeySequence::MoveToNextLine);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_next_line.has_value());
-    BOOST_CHECK(!ctrl.last_move_next_line->shift);
+    BOOST_CHECK(!ctrl.last_move_next_line->keep_anchor);
 }
 
-BOOST_AUTO_TEST_CASE(select_next_line_calls_move_next_line_with_shift_true) {
+BOOST_AUTO_TEST_CASE(select_next_line_calls_move_next_line_with_keep_anchor_true) {
     auto e = make_standard_key_event(QKeySequence::SelectNextLine);
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_next_line.has_value());
-    BOOST_CHECK(ctrl.last_move_next_line->shift);
+    BOOST_CHECK(ctrl.last_move_next_line->keep_anchor);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

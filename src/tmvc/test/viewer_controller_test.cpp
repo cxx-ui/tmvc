@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(move_next_word) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 0}, {0, 0});
-    controller.move_next_word(false, false, false);
+    controller.move_next_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_space) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 4}, {0, 4});
-    controller.move_next_word(false, false, false);
+    controller.move_next_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_no_alnum) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 8}, {0, 8});
-    controller.move_next_word(false, false, false);
+    controller.move_next_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_via_alnum) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 13}, {0, 13});
-    controller.move_next_word(false, false, false);
+    controller.move_next_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_eol) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 16}, {0, 16});
-    controller.move_next_word(false, false, false);
+    controller.move_next_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_next_line) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 18}, {0, 18});
-    controller.move_next_word(false, false, false);
+    controller.move_next_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 1);
@@ -494,7 +494,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_underscore) {
     std::wstring txt = L"foo_bar baz";
     text.reset(txt);
     controller.select_text({0, 0}, {0, 0});
-    controller.move_next_word(false, false, false);
+    controller.move_next_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(move_next_word_at_underscore) {
     std::wstring txt = L"foo_bar baz";
     text.reset(txt);
     controller.select_text({0, 3}, {0, 3});
-    controller.move_next_word(false, false, false);
+    controller.move_next_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 12}, {0, 12});
-    controller.move_prev_word(false, false, false);
+    controller.move_prev_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_space) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 8}, {0, 8});
-    controller.move_prev_word(false, false, false);
+    controller.move_prev_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_no_alnum) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 18}, {0, 18});
-    controller.move_prev_word(false, false, false);
+    controller.move_prev_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_via_alnum) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 16}, {0, 16});
-    controller.move_prev_word(false, false, false);
+    controller.move_prev_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_start) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({0, 4}, {0, 4});
-    controller.move_prev_word(false, false, false);
+    controller.move_prev_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -599,7 +599,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_prev_line) {
     std::wstring txt = L"line of text ((*sd\n line2";
     text.reset(txt);
     controller.select_text({1, 0}, {1, 0});
-    controller.move_prev_word(false, false, false);
+    controller.move_prev_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_underscore) {
     std::wstring txt = L"foo_bar baz";
     text.reset(txt);
     controller.select_text({0, 7}, {0, 7});
-    controller.move_prev_word(false, false, false);
+    controller.move_prev_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(move_prev_word_at_underscore) {
     std::wstring txt = L"foo_bar baz";
     text.reset(txt);
     controller.select_text({0, 4}, {0, 4});
-    controller.move_prev_word(false, false, false);
+    controller.move_prev_word(false);
 
     BOOST_CHECK(string(text) == txt);
     BOOST_CHECK_EQUAL(selection.pos().line, 0);

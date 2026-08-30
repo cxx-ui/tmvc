@@ -47,14 +47,20 @@ bool process_selection_key_event(Controller & controller,
 
     // dispatching word navigation sequences if controller supports them
     if constexpr (selection_controller_with_word_navigation<Controller>) {
-        if (event->matches(QKeySequence::MoveToNextWord) ||
-            event->matches(QKeySequence::SelectNextWord)) {
-            controller.move_next_word(ctrl, alt, shift);
+        if (event->matches(QKeySequence::MoveToNextWord)) {
+            controller.move_next_word(false);
             event->accept();
             return true;
-        } else if (event->matches(QKeySequence::MoveToPreviousWord) ||
-                   event->matches(QKeySequence::SelectPreviousWord)) {
-            controller.move_prev_word(ctrl, alt, shift);
+        } else if (event->matches(QKeySequence::SelectNextWord)) {
+            controller.move_next_word(true);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::MoveToPreviousWord)) {
+            controller.move_prev_word(false);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::SelectPreviousWord)) {
+            controller.move_prev_word(true);
             event->accept();
             return true;
         }
@@ -62,24 +68,36 @@ bool process_selection_key_event(Controller & controller,
 
     // dispatching line navigation sequences if controller supports them
     if constexpr (selection_controller_with_line_navigation<Controller>) {
-        if (event->matches(QKeySequence::MoveToStartOfLine) ||
-            event->matches(QKeySequence::SelectStartOfLine)) {
-            controller.move_line_start(ctrl, alt, shift, pos);
+        if (event->matches(QKeySequence::MoveToStartOfLine)) {
+            controller.move_line_start(false, pos);
             event->accept();
             return true;
-        } else if (event->matches(QKeySequence::MoveToEndOfLine) ||
-                   event->matches(QKeySequence::SelectEndOfLine)) {
-            controller.move_line_end(ctrl, alt, shift, pos);
+        } else if (event->matches(QKeySequence::SelectStartOfLine)) {
+            controller.move_line_start(true, pos);
             event->accept();
             return true;
-        } else if (event->matches(QKeySequence::MoveToPreviousLine) ||
-                   event->matches(QKeySequence::SelectPreviousLine)) {
-            controller.move_prev_line(ctrl, alt, shift, pos);
+        } else if (event->matches(QKeySequence::MoveToEndOfLine)) {
+            controller.move_line_end(false, pos);
             event->accept();
             return true;
-        } else if (event->matches(QKeySequence::MoveToNextLine) ||
-                   event->matches(QKeySequence::SelectNextLine)) {
-            controller.move_next_line(ctrl, alt, shift, pos);
+        } else if (event->matches(QKeySequence::SelectEndOfLine)) {
+            controller.move_line_end(true, pos);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::MoveToPreviousLine)) {
+            controller.move_prev_line(false, pos);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::SelectPreviousLine)) {
+            controller.move_prev_line(true, pos);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::MoveToNextLine)) {
+            controller.move_next_line(false, pos);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::SelectNextLine)) {
+            controller.move_next_line(true, pos);
             event->accept();
             return true;
         }
@@ -92,14 +110,30 @@ bool process_selection_key_event(Controller & controller,
         // explicitly here so that the behaviour is consistent across all platforms.
         bool alt_up   = alt && !ctrl && event->key() == Qt::Key_Up;
         bool alt_down = alt && !ctrl && event->key() == Qt::Key_Down;
-        if (event->matches(QKeySequence::MoveToStartOfBlock) ||
-            event->matches(QKeySequence::SelectStartOfBlock) || alt_up) {
-            controller.move_block_start(ctrl, alt, shift);
+        if (event->matches(QKeySequence::MoveToStartOfBlock)) {
+            controller.move_block_start(false);
             event->accept();
             return true;
-        } else if (event->matches(QKeySequence::MoveToEndOfBlock) ||
-                   event->matches(QKeySequence::SelectEndOfBlock) || alt_down) {
-            controller.move_block_end(ctrl, alt, shift);
+        } else if (event->matches(QKeySequence::SelectStartOfBlock)) {
+            controller.move_block_start(true);
+            event->accept();
+            return true;
+        } else if (alt_up) {
+            // keeping anchor when Shift is pressed with the explicitly matched sequence
+            controller.move_block_start(shift);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::MoveToEndOfBlock)) {
+            controller.move_block_end(false);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::SelectEndOfBlock)) {
+            controller.move_block_end(true);
+            event->accept();
+            return true;
+        } else if (alt_down) {
+            // keeping anchor when Shift is pressed with the explicitly matched sequence
+            controller.move_block_end(shift);
             event->accept();
             return true;
         }
