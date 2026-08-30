@@ -135,6 +135,19 @@ struct mock_nav_controller: public mock_selection_controller {
     void move_block_end(bool keep_anchor) {
         last_move_block_end = keep_anchor;
     }
+
+    std::optional<line_nav_args> last_move_prev_page; ///<
+    std::optional<line_nav_args> last_move_next_page; ///<
+
+    void set_viewport_height(uint64_t) {}
+
+    void move_prev_page(bool keep_anchor, const std::optional<position> & p) {
+        last_move_prev_page = {keep_anchor, p};
+    }
+
+    void move_next_page(bool keep_anchor, const std::optional<position> & p) {
+        last_move_next_page = {keep_anchor, p};
+    }
 };
 
 
@@ -608,6 +621,34 @@ BOOST_AUTO_TEST_CASE(select_next_line_calls_move_next_line_with_keep_anchor_true
     BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
     BOOST_REQUIRE(ctrl.last_move_next_line.has_value());
     BOOST_CHECK(ctrl.last_move_next_line->keep_anchor);
+}
+
+BOOST_AUTO_TEST_CASE(move_to_previous_page_calls_move_prev_page_with_keep_anchor_false) {
+    auto e = make_standard_key_event(QKeySequence::MoveToPreviousPage);
+    BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
+    BOOST_REQUIRE(ctrl.last_move_prev_page.has_value());
+    BOOST_CHECK(!ctrl.last_move_prev_page->keep_anchor);
+}
+
+BOOST_AUTO_TEST_CASE(select_previous_page_calls_move_prev_page_with_keep_anchor_true) {
+    auto e = make_standard_key_event(QKeySequence::SelectPreviousPage);
+    BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
+    BOOST_REQUIRE(ctrl.last_move_prev_page.has_value());
+    BOOST_CHECK(ctrl.last_move_prev_page->keep_anchor);
+}
+
+BOOST_AUTO_TEST_CASE(move_to_next_page_calls_move_next_page_with_keep_anchor_false) {
+    auto e = make_standard_key_event(QKeySequence::MoveToNextPage);
+    BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
+    BOOST_REQUIRE(ctrl.last_move_next_page.has_value());
+    BOOST_CHECK(!ctrl.last_move_next_page->keep_anchor);
+}
+
+BOOST_AUTO_TEST_CASE(select_next_page_calls_move_next_page_with_keep_anchor_true) {
+    auto e = make_standard_key_event(QKeySequence::SelectNextPage);
+    BOOST_CHECK(impl::process_selection_key_event(ctrl, &e));
+    BOOST_REQUIRE(ctrl.last_move_next_page.has_value());
+    BOOST_CHECK(ctrl.last_move_next_page->keep_anchor);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -114,11 +114,11 @@ concept selection_controller_with_paging = selection_controller<Controller> && r
     // Sets viewport height in lines
     cntrl.set_viewport_height(std::declval<uint64_t>());
 
-    // Performs actions when user presses page up button
-    cntrl.do_page_up(true, false, false, std::declval<std::optional<position>>());
+    // Moves cursor to previous page, keeping selection anchor if keep_anchor is true
+    cntrl.move_prev_page(true, std::declval<std::optional<position>>());
 
-    // Performs actions when user presses page down button
-    cntrl.do_page_down(true, false, false, std::declval<std::optional<position>>());
+    // Moves cursor to next page, keeping selection anchor if keep_anchor is true
+    cntrl.move_next_page(true, std::declval<std::optional<position>>());
 };
 
 

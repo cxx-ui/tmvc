@@ -41,7 +41,8 @@ concept std_selection_controller_derived = requires(Derived & derived, const Der
 /// logic. Uses CRTP pattern to implement non-virtual dynamic dispatch. The derived class
 /// must confirm to the std_selection_controller_derived concept.
 template <typename Derived, text_model TextModel>
-class std_selection_controller: public std_mouse_controller<Derived>, public std_paging_controller<Derived> {
+class std_selection_controller: public std_mouse_controller<Derived>,
+                                public std_paging_controller<Derived> {
 public:
     /// Type of text model
     using text_model_t = TextModel;

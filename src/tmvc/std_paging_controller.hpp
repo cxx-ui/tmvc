@@ -45,42 +45,54 @@ public:
         viewport_height_ = height;
     }
 
-    // Performs actions when user presses page up button
+    /// Moves cursor to previous page, using target_pos for visual wrap mode
+    void move_prev_page(bool keep_anchor,
+                        const std::optional<position> & target_pos = std::nullopt) {
+        static_assert(std_paging_controller_derived<Derived>);
+        auto * d = static_cast<Derived*>(this);
+        if (target_pos) {
+            if (keep_anchor) {
+                d->select_text(d->anchor_pos(), *target_pos, false);
+            } else {
+                d->select_text(*target_pos, *target_pos, false);
+            }
+            return;
+        }
+
+        d->move_lines_up(viewport_height_, keep_anchor);
+    }
+
+    /// Moves cursor to next page, using target_pos for visual wrap mode
+    void move_next_page(bool keep_anchor,
+                        const std::optional<position> & target_pos = std::nullopt) {
+        static_assert(std_paging_controller_derived<Derived>);
+        auto * d = static_cast<Derived*>(this);
+        if (target_pos) {
+            if (keep_anchor) {
+                d->select_text(d->anchor_pos(), *target_pos, false);
+            } else {
+                d->select_text(*target_pos, *target_pos, false);
+            }
+            return;
+        }
+
+        d->move_lines_down(viewport_height_, keep_anchor);
+    }
+
+    /// Performs actions when user presses page up button
     void do_page_up(bool,
                     bool shift,
                     bool,
                     const std::optional<position> & pos = std::nullopt) {
-        static_assert(std_paging_controller_derived<Derived>);
-        auto * d = static_cast<Derived*>(this);
-        if (pos) {
-            if (shift) {
-                d->select_text(d->anchor_pos(), *pos, false);
-            } else {
-                d->select_text(*pos, *pos, false);
-            }
-            return;
-        }
-
-        d->move_lines_up(viewport_height_, shift);
+        move_prev_page(shift, pos);
     }
 
-    // Performs actions when user presses page down button
+    /// Performs actions when user presses page down button
     void do_page_down(bool,
                       bool shift,
                       bool,
                       const std::optional<position> & pos = std::nullopt) {
-        static_assert(std_paging_controller_derived<Derived>);
-        auto * d = static_cast<Derived*>(this);
-        if (pos) {
-            if (shift) {
-                d->select_text(d->anchor_pos(), *pos, false);
-            } else {
-                d->select_text(*pos, *pos, false);
-            }
-            return;
-        }
-
-        d->move_lines_down(viewport_height_, shift);
+        move_next_page(shift, pos);
     }
 
 private:

@@ -139,17 +139,25 @@ bool process_selection_key_event(Controller & controller,
         }
     }
 
-    // dispatching page navigation sequences
-    if (event->matches(QKeySequence::MoveToPreviousPage) ||
-        event->matches(QKeySequence::SelectPreviousPage)) {
-        controller.do_page_up(ctrl, shift, alt, pos);
-        event->accept();
-        return true;
-    } else if (event->matches(QKeySequence::MoveToNextPage) ||
-               event->matches(QKeySequence::SelectNextPage)) {
-        controller.do_page_down(ctrl, shift, alt, pos);
-        event->accept();
-        return true;
+    // dispatching page navigation sequences if controller supports them
+    if constexpr (selection_controller_with_paging<Controller>) {
+        if (event->matches(QKeySequence::MoveToPreviousPage)) {
+            controller.move_prev_page(false, pos);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::SelectPreviousPage)) {
+            controller.move_prev_page(true, pos);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::MoveToNextPage)) {
+            controller.move_next_page(false, pos);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::SelectNextPage)) {
+            controller.move_next_page(true, pos);
+            event->accept();
+            return true;
+        }
     }
 
     // processing navigation keys
@@ -177,6 +185,14 @@ bool process_selection_key_event(Controller & controller,
         return true;
     case Qt::Key_End:
         controller.do_end(ctrl, shift, alt);
+        event->accept();
+        return true;
+    case Qt::Key_PageUp:
+        controller.do_page_up(ctrl, shift, alt, pos);
+        event->accept();
+        return true;
+    case Qt::Key_PageDown:
+        controller.do_page_down(ctrl, shift, alt, pos);
         event->accept();
         return true;
 
