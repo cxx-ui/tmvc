@@ -239,6 +239,19 @@ bool process_edit_key_event(Controller & controller,
         return true;
     }
 
+    // dispatching word deleting sequences if controller supports word navigation
+    if constexpr (selection_controller_with_word_navigation<Controller>) {
+        if (event->matches(QKeySequence::DeleteStartOfWord)) {
+            delete_start_of_word(controller);
+            event->accept();
+            return true;
+        } else if (event->matches(QKeySequence::DeleteEndOfWord)) {
+            delete_end_of_word(controller);
+            event->accept();
+            return true;
+        }
+    }
+
     // processing modification keys
     switch (event->key()) {
     case Qt::Key_Backspace:

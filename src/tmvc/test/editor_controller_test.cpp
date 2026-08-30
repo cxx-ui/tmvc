@@ -1202,6 +1202,230 @@ BOOST_AUTO_TEST_CASE(replace_all_without_matches) {
 }
 
 
+/// Tests deleting word before cursor
+BOOST_AUTO_TEST_CASE(delete_start_of_word_at_word_end) {
+    controller.set_text(L"foo bar baz");
+    controller.select_text({0, 11}, {0, 11});
+
+    delete_start_of_word(controller);
+
+    BOOST_CHECK(string(text) == L"foo bar ");
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 8);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 8);
+}
+
+
+/// Tests deleting word before cursor with spaces when cursor is at word start
+BOOST_AUTO_TEST_CASE(delete_start_of_word_at_word_start) {
+    controller.set_text(L"foo bar");
+    controller.select_text({0, 4}, {0, 4});
+
+    delete_start_of_word(controller);
+
+    BOOST_CHECK(string(text) == L"bar");
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 0);
+}
+
+
+/// Tests deleting word before cursor with underscore in word
+BOOST_AUTO_TEST_CASE(delete_start_of_word_with_underscore) {
+    controller.set_text(L"foo foo_bar");
+    controller.select_text({0, 11}, {0, 11});
+
+    delete_start_of_word(controller);
+
+    BOOST_CHECK(string(text) == L"foo ");
+}
+
+
+/// Tests deleting word before cursor at the beginning of line
+BOOST_AUTO_TEST_CASE(delete_start_of_word_at_line_start) {
+    controller.set_text(L"foo\nbar");
+    controller.select_text({1, 0}, {1, 0});
+
+    delete_start_of_word(controller);
+
+    BOOST_CHECK(string(text) == L"foobar");
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 3);
+}
+
+
+/// Tests deleting word before cursor at the beginning of text
+BOOST_AUTO_TEST_CASE(delete_start_of_word_at_text_start) {
+    controller.set_text(L"foo bar");
+    controller.select_text({0, 0}, {0, 0});
+
+    delete_start_of_word(controller);
+
+    BOOST_CHECK(string(text) == L"foo bar");
+    BOOST_CHECK(!controller.can_undo());
+}
+
+
+/// Tests undo of deleting word before cursor
+BOOST_AUTO_TEST_CASE(delete_start_of_word_undo) {
+    controller.set_text(L"foo bar");
+    controller.select_text({0, 7}, {0, 7});
+
+    delete_start_of_word(controller);
+    BOOST_CHECK(string(text) == L"foo ");
+
+    controller.undo();
+    BOOST_CHECK(string(text) == L"foo bar");
+}
+
+
+/// Tests deleting word after cursor
+BOOST_AUTO_TEST_CASE(delete_end_of_word_at_word_start) {
+    controller.set_text(L"foo bar baz");
+    controller.select_text({0, 0}, {0, 0});
+
+    delete_end_of_word(controller);
+
+    BOOST_CHECK(string(text) == L"bar baz");
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.anchor_pos().column, 0);
+}
+
+
+/// Tests deleting rest of word after cursor
+BOOST_AUTO_TEST_CASE(delete_end_of_word_in_word) {
+    controller.set_text(L"foo bar");
+    controller.select_text({0, 1}, {0, 1});
+
+    delete_end_of_word(controller);
+
+    BOOST_CHECK(string(text) == L"fbar");
+}
+
+
+/// Tests deleting word after cursor at the end of line
+BOOST_AUTO_TEST_CASE(delete_end_of_word_at_line_end) {
+    controller.set_text(L"foo\nbar");
+    controller.select_text({0, 3}, {0, 3});
+
+    delete_end_of_word(controller);
+
+    BOOST_CHECK(string(text) == L"foobar");
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 3);
+}
+
+
+/// Tests deleting word after cursor at the end of text
+BOOST_AUTO_TEST_CASE(delete_end_of_word_at_text_end) {
+    controller.set_text(L"foo bar");
+    controller.select_text({0, 7}, {0, 7});
+
+    delete_end_of_word(controller);
+
+    BOOST_CHECK(string(text) == L"foo bar");
+    BOOST_CHECK(!controller.can_undo());
+}
+
+
+/// Tests deleting selected text instead of word before cursor
+BOOST_AUTO_TEST_CASE(delete_start_of_word_with_selection) {
+    controller.set_text(L"foo bar baz");
+    controller.select_text({0, 8}, {0, 11});
+
+    delete_start_of_word(controller);
+
+    BOOST_CHECK(string(text) == L"foo bar ");
+}
+
+
+/// Tests deleting selected text instead of word after cursor
+BOOST_AUTO_TEST_CASE(delete_end_of_word_with_selection) {
+    controller.set_text(L"foo bar baz");
+    controller.select_text({0, 0}, {0, 3});
+
+    delete_end_of_word(controller);
+
+    BOOST_CHECK(string(text) == L" bar baz");
+}
+
+
+/// Tests deleting word before cursor when user presses backspace with ctrl
+BOOST_AUTO_TEST_CASE(do_backspace_ctrl_deletes_prev_word) {
+    controller.set_text(L"foo bar baz");
+    controller.select_text({0, 11}, {0, 11});
+
+    // word is deleted with ctrl on all platforms except macOS, where alt is used
+    controller.do_backspace(true, false, true);
+
+    BOOST_CHECK(string(text) == L"foo bar ");
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 8);
+}
+
+
+/// Tests deleting single character when user presses backspace without ctrl
+BOOST_AUTO_TEST_CASE(do_backspace_without_ctrl_deletes_char) {
+    controller.set_text(L"foo bar");
+    controller.select_text({0, 7}, {0, 7});
+
+    controller.do_backspace(false, false, false);
+
+    BOOST_CHECK(string(text) == L"foo ba");
+}
+
+
+/// Tests deleting word after cursor when user presses delete with ctrl
+BOOST_AUTO_TEST_CASE(do_delete_ctrl_deletes_next_word) {
+    controller.set_text(L"foo bar baz");
+    controller.select_text({0, 0}, {0, 0});
+
+    // word is deleted with ctrl on all platforms except macOS, where alt is used
+    controller.do_delete(true, false, true);
+
+    BOOST_CHECK(string(text) == L"bar baz");
+    BOOST_CHECK_EQUAL(selection.pos().line, 0);
+    BOOST_CHECK_EQUAL(selection.pos().column, 0);
+}
+
+
+/// Tests deleting single character when user presses delete without ctrl
+BOOST_AUTO_TEST_CASE(do_delete_without_ctrl_deletes_char) {
+    controller.set_text(L"foo bar");
+    controller.select_text({0, 0}, {0, 0});
+
+    controller.do_delete(false, false, false);
+
+    BOOST_CHECK(string(text) == L"oo bar");
+}
+
+
+/// Tests deleting selected text when user presses backspace with ctrl
+BOOST_AUTO_TEST_CASE(do_backspace_ctrl_with_selection) {
+    controller.set_text(L"foo bar baz");
+    controller.select_text({0, 8}, {0, 11});
+
+    controller.do_backspace(true, false, true);
+
+    BOOST_CHECK(string(text) == L"foo bar ");
+}
+
+
+/// Tests undo of deleting word when user presses backspace with ctrl
+BOOST_AUTO_TEST_CASE(do_backspace_ctrl_undo) {
+    controller.set_text(L"foo bar");
+    controller.select_text({0, 7}, {0, 7});
+
+    controller.do_backspace(true, false, true);
+    BOOST_CHECK(string(text) == L"foo ");
+
+    controller.undo();
+    BOOST_CHECK(string(text) == L"foo bar");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

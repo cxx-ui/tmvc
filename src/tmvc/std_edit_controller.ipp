@@ -238,6 +238,15 @@ void std_edit_controller<Derived, TextModel>::clear() {
 
 template <typename Derived, editable_text_model TextModel>
 void std_edit_controller<Derived, TextModel>::do_delete(bool ctrl, bool shift, bool alt) {
+    bool delete_word = ctrl;
+#if defined(__APPLE__)
+    delete_word = alt;
+#endif
+    if (delete_word) {
+        delete_end_of_word(*static_cast<Derived*>(this));
+        return;
+    }
+
     auto sel = selected_range();
     if (sel.start == sel.end) {
         // deleting single character
@@ -254,6 +263,15 @@ void std_edit_controller<Derived, TextModel>::do_delete(bool ctrl, bool shift, b
 
 template <typename Derived, editable_text_model TextModel>
 void std_edit_controller<Derived, TextModel>::do_backspace(bool ctrl, bool shift, bool alt) {
+    bool delete_word = ctrl;
+#if defined(__APPLE__)
+    delete_word = alt;
+#endif
+    if (delete_word) {
+        delete_start_of_word(*static_cast<Derived*>(this));
+        return;
+    }
+
     auto sel = selected_range();
     if (sel.start == sel.end) {
         // backspacing single character

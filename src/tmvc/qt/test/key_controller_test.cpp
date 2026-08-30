@@ -164,9 +164,14 @@ struct mock_edit_controller: public mock_selection_controller {
     std::optional<wchar_t> last_char; ///<
     std::wstring pasted;              ///<
 
+    std::optional<bool> last_move_prev_word; ///<
+    std::optional<bool> last_move_next_word; ///<
+    bool has_selection = false;              ///<
+    bool delete_called = false;              ///<
+
     bool is_overwrite_mode() { return false; }
     bool can_cut() { return true; }
-    bool can_delete() { return true; }
+    bool can_delete() { return has_selection; }
     bool can_undo() { return true; }
     bool can_redo() { return true; }
 
@@ -175,9 +180,23 @@ struct mock_edit_controller: public mock_selection_controller {
     template <std::ranges::input_range R>
     void paste(R && chars) { pasted.assign(std::ranges::begin(chars), std::ranges::end(chars)); }
 
-    void delete_() {}
+    void delete_() {
+        delete_called = true;
+        has_selection = false;
+    }
+
     void undo() { undo_called = true; }
     void redo() { redo_called = true; }
+
+    void move_prev_word(bool keep_anchor) {
+        last_move_prev_word = keep_anchor;
+        has_selection = true;
+    }
+
+    void move_next_word(bool keep_anchor) {
+        last_move_next_word = keep_anchor;
+        has_selection = true;
+    }
 
     void do_backspace(bool c, bool s, bool a) { last_backspace = {c, s, a, {}}; }
     void do_delete(bool c, bool s, bool a) { last_delete = {c, s, a, {}}; }
@@ -407,13 +426,6 @@ BOOST_AUTO_TEST_CASE(backspace_plain_is_handled_with_ctrl_false) {
     BOOST_CHECK(!ctrl.last_backspace->ctrl);
 }
 
-BOOST_AUTO_TEST_CASE(backspace_ctrl_passes_ctrl_true) {
-    QKeyEvent e{QEvent::KeyPress, Qt::Key_Backspace, Qt::ControlModifier};
-    impl::process_edit_key_event(ctrl, &e);
-    BOOST_REQUIRE(ctrl.last_backspace.has_value());
-    BOOST_CHECK(ctrl.last_backspace->ctrl);
-}
-
 BOOST_AUTO_TEST_CASE(delete_plain_is_handled_with_ctrl_false) {
     QKeyEvent e{QEvent::KeyPress, Qt::Key_Delete, Qt::NoModifier};
     BOOST_CHECK(impl::process_edit_key_event(ctrl, &e));
@@ -421,11 +433,31 @@ BOOST_AUTO_TEST_CASE(delete_plain_is_handled_with_ctrl_false) {
     BOOST_CHECK(!ctrl.last_delete->ctrl);
 }
 
-BOOST_AUTO_TEST_CASE(delete_ctrl_passes_ctrl_true) {
-    QKeyEvent e{QEvent::KeyPress, Qt::Key_Delete, Qt::ControlModifier};
-    impl::process_edit_key_event(ctrl, &e);
-    BOOST_REQUIRE(ctrl.last_delete.has_value());
-    BOOST_CHECK(ctrl.last_delete->ctrl);
+BOOST_AUTO_TEST_CASE(delete_start_of_word_selects_prev_word_and_deletes_it) {
+    auto e = make_standard_key_event(QKeySequence::DeleteStartOfWord);
+    BOOST_CHECK(impl::process_edit_key_event(ctrl, &e));
+    BOOST_REQUIRE(ctrl.last_move_prev_word.has_value());
+    BOOST_CHECK(*ctrl.last_move_prev_word);
+    BOOST_CHECK(ctrl.delete_called);
+    BOOST_CHECK(!ctrl.last_backspace.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(delete_end_of_word_selects_next_word_and_deletes_it) {
+    auto e = make_standard_key_event(QKeySequence::DeleteEndOfWord);
+    BOOST_CHECK(impl::process_edit_key_event(ctrl, &e));
+    BOOST_REQUIRE(ctrl.last_move_next_word.has_value());
+    BOOST_CHECK(*ctrl.last_move_next_word);
+    BOOST_CHECK(ctrl.delete_called);
+    BOOST_CHECK(!ctrl.last_delete.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(delete_start_of_word_deletes_selection_when_text_is_selected) {
+    ctrl.has_selection = true;
+
+    auto e = make_standard_key_event(QKeySequence::DeleteStartOfWord);
+    BOOST_CHECK(impl::process_edit_key_event(ctrl, &e));
+    BOOST_CHECK(!ctrl.last_move_prev_word.has_value());
+    BOOST_CHECK(ctrl.delete_called);
 }
 
 BOOST_AUTO_TEST_CASE(return_key_is_handled) {

@@ -128,4 +128,36 @@ void replace_all(Controller & controller,
 }
 
 
+/// Deletes text from start of previous word to current position in edit controller
+template <edit_controller Controller>
+requires selection_controller_with_word_navigation<Controller>
+void delete_start_of_word(Controller & controller) {
+    // selecting text up to start of previous word, selected text is deleted as is
+    if (!controller.can_delete()) {
+        controller.move_prev_word(true);
+    }
+
+    // there is nothing to delete when cursor is at the beginning of text
+    if (controller.can_delete()) {
+        controller.delete_();
+    }
+}
+
+
+/// Deletes text from current position to start of next word in edit controller
+template <edit_controller Controller>
+requires selection_controller_with_word_navigation<Controller>
+void delete_end_of_word(Controller & controller) {
+    // selecting text up to start of next word, selected text is deleted as is
+    if (!controller.can_delete()) {
+        controller.move_next_word(true);
+    }
+
+    // there is nothing to delete when cursor is at the end of text
+    if (controller.can_delete()) {
+        controller.delete_();
+    }
+}
+
+
 }

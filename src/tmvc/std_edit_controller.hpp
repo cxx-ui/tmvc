@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "edit_controller.hpp"
 #include "modification.hpp"
 #include "selection_model.hpp"
 #include "std_character.hpp"
