@@ -166,7 +166,7 @@ void std_edit_controller<Derived, TextModel>::perform_undo(const modification<ch
     } else if (auto replace_mod = dynamic_cast<const replace_modification<char_t>*>(&mod)) {
         derived_set_pos_move_anchor(replace_mod->modification_range().start);
         derived_set_pos_keep_anchor(replace_mod->modification_range().end);
-        paste(replace_mod->new_chars());
+        paste(replace_mod->old_chars());
     } else if (auto group_mod = dynamic_cast<const modification_group<char_t>*>(&mod)) {
         auto mods = group_mod->modifications() | std::views::common;
         for (auto && group_item : mods | std::views::reverse) {
@@ -194,7 +194,7 @@ void std_edit_controller<Derived, TextModel>::perform_redo(const modification<ch
     } else if (auto replace_mod = dynamic_cast<const replace_modification<char_t>*>(&mod)) {
         derived_set_pos_move_anchor(replace_mod->modification_range().start);
         derived_set_pos_keep_anchor(replace_mod->modification_range().end);
-        paste(replace_mod->old_chars());
+        paste(replace_mod->new_chars());
     } else if (auto group_mod = dynamic_cast<const modification_group<char_t>*>(&mod)) {
         for (auto && group_item : group_mod->modifications()) {
             perform_redo(*group_item);
@@ -233,6 +233,38 @@ requires std_character<char_t> {
 template <typename Derived, editable_text_model TextModel>
 void std_edit_controller<Derived, TextModel>::clear() {
     tmvc::clear(text_mdl_);
+}
+
+
+template <typename Derived, editable_text_model TextModel>
+template <std::ranges::range CharsRange>
+range std_edit_controller<Derived, TextModel>::insert(const position & p, CharsRange && chars) {
+    return insert_chars(p, std::forward<CharsRange>(chars));
+}
+
+
+template <typename Derived, editable_text_model TextModel>
+void std_edit_controller<Derived, TextModel>::erase(const range & r) {
+    delete_chars(r);
+}
+
+
+template <typename Derived, editable_text_model TextModel>
+template <std::ranges::range CharsRange>
+void std_edit_controller<Derived, TextModel>::replace(const position & p, CharsRange && chars) {
+    if (std::ranges::empty(chars)) {
+        return;
+    }
+
+    // saving replaced characters for undo action
+    const range r{p, advance_pos(text_mdl_, p, std::ranges::distance(chars))};
+    auto old_chars = characters_vector(text_mdl_, r);
+
+    text_mdl_.replace(p, chars);
+
+    if (enable_history_) {
+        history_.add(std::make_unique<replace_modification<char_t>>(r, old_chars, chars));
+    }
 }
 
 

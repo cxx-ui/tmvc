@@ -1426,6 +1426,134 @@ BOOST_AUTO_TEST_CASE(do_backspace_ctrl_undo) {
 }
 
 
+/// Tests inserting characters at specified position
+BOOST_AUTO_TEST_CASE(insert_at_position) {
+    controller.set_text(L"foo baz");
+
+    auto r = controller.insert({0, 4}, std::vector<wchar_t>{L'b', L'a', L'r', L' '});
+
+    BOOST_CHECK(string(text) == L"foo bar baz");
+    BOOST_CHECK_EQUAL(r.start.line, 0);
+    BOOST_CHECK_EQUAL(r.start.column, 4);
+    BOOST_CHECK_EQUAL(r.end.line, 0);
+    BOOST_CHECK_EQUAL(r.end.column, 8);
+}
+
+
+/// Tests undo and redo of inserting characters at specified position
+BOOST_AUTO_TEST_CASE(insert_at_position_undo_redo) {
+    controller.set_text(L"foo baz");
+
+    controller.insert({0, 4}, std::vector<wchar_t>{L'b', L'a', L'r', L' '});
+    BOOST_CHECK(controller.can_undo());
+
+    controller.undo();
+    BOOST_CHECK(string(text) == L"foo baz");
+    BOOST_CHECK(controller.can_redo());
+
+    controller.redo();
+    BOOST_CHECK(string(text) == L"foo bar baz");
+}
+
+
+/// Tests that inserting empty range of characters does nothing
+BOOST_AUTO_TEST_CASE(insert_empty_chars) {
+    controller.set_text(L"foo baz");
+
+    controller.insert({0, 4}, std::vector<wchar_t>{});
+
+    BOOST_CHECK(string(text) == L"foo baz");
+    BOOST_CHECK(!controller.can_undo());
+}
+
+
+/// Tests erasing characters in specified range
+BOOST_AUTO_TEST_CASE(erase_range) {
+    controller.set_text(L"foo bar baz");
+
+    controller.erase({{0, 4}, {0, 8}});
+
+    BOOST_CHECK(string(text) == L"foo baz");
+}
+
+
+/// Tests undo and redo of erasing characters in specified range
+BOOST_AUTO_TEST_CASE(erase_range_undo_redo) {
+    controller.set_text(L"foo bar baz");
+
+    controller.erase({{0, 4}, {0, 8}});
+    BOOST_CHECK(controller.can_undo());
+
+    controller.undo();
+    BOOST_CHECK(string(text) == L"foo bar baz");
+    BOOST_CHECK(controller.can_redo());
+
+    controller.redo();
+    BOOST_CHECK(string(text) == L"foo baz");
+}
+
+
+/// Tests erasing characters spanning several lines
+BOOST_AUTO_TEST_CASE(erase_range_multiple_lines) {
+    controller.set_text(L"foo\nbar\nbaz");
+
+    controller.erase({{0, 2}, {2, 1}});
+
+    BOOST_CHECK(string(text) == L"foaz");
+
+    controller.undo();
+    BOOST_CHECK(string(text) == L"foo\nbar\nbaz");
+}
+
+
+/// Tests that erasing empty range does nothing
+BOOST_AUTO_TEST_CASE(erase_empty_range) {
+    controller.set_text(L"foo baz");
+
+    controller.erase({{0, 4}, {0, 4}});
+
+    BOOST_CHECK(string(text) == L"foo baz");
+    BOOST_CHECK(!controller.can_undo());
+}
+
+
+/// Tests replacing characters at specified position
+BOOST_AUTO_TEST_CASE(replace_at_position) {
+    controller.set_text(L"foo bar baz");
+
+    controller.replace({0, 4}, std::vector<wchar_t>{L'B', L'A', L'R'});
+
+    BOOST_CHECK(string(text) == L"foo BAR baz");
+}
+
+
+/// Tests undo and redo of replacing characters at specified position
+BOOST_AUTO_TEST_CASE(replace_at_position_undo_redo) {
+    controller.set_text(L"foo bar baz");
+
+    controller.replace({0, 4}, std::vector<wchar_t>{L'B', L'A', L'R'});
+    BOOST_CHECK(controller.can_undo());
+
+    controller.undo();
+    BOOST_CHECK(string(text) == L"foo bar baz");
+    BOOST_CHECK(controller.can_redo());
+
+    controller.redo();
+    BOOST_CHECK(string(text) == L"foo BAR baz");
+}
+
+
+/// Tests that replacing with empty range of characters does nothing
+BOOST_AUTO_TEST_CASE(replace_empty_chars) {
+    controller.set_text(L"foo bar baz");
+
+    controller.replace({0, 4}, std::vector<wchar_t>{});
+
+    BOOST_CHECK(string(text) == L"foo bar baz");
+    BOOST_CHECK(!controller.can_undo());
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

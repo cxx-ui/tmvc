@@ -204,6 +204,23 @@ struct mock_edit_controller: public mock_selection_controller {
     void do_tab(bool c, bool s, bool a) { last_tab = {c, s, a, {}}; }
     void do_insert(bool, bool, bool) {}
     void do_char(wchar_t ch) { last_char = ch; }
+
+    template <std::ranges::input_range R>
+    range insert(const position & p, R && chars) {
+        inserted.assign(std::ranges::begin(chars), std::ranges::end(chars));
+        return {p, p};
+    }
+
+    void erase(const range & r) { erased = r; }
+
+    template <std::ranges::input_range R>
+    void replace(const position &, R && chars) {
+        replaced.assign(std::ranges::begin(chars), std::ranges::end(chars));
+    }
+
+    std::wstring inserted;             ///<
+    std::optional<range> erased;       ///<
+    std::wstring replaced;             ///<
 };
 
 

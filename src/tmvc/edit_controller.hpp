@@ -21,6 +21,10 @@ concept edit_controller = selection_controller<Controller> && requires(Controlle
     // Returns true if controller is in overwrite mode
     { cntrl.is_overwrite_mode() } -> std::convertible_to<bool>;
 
+
+    ////////////////////////////////////////////////////////////
+    // Keyboard input processing
+
     // Performs actions when user presses delete button
     cntrl.do_delete(true, false, false);
 
@@ -38,6 +42,22 @@ concept edit_controller = selection_controller<Controller> && requires(Controlle
 
     /// Performs actions when user presses character button
     cntrl.do_char(std::declval<typename Controller::char_t>());
+
+
+    ////////////////////////////////////////////////////////////
+    // Text modification
+
+    // Inserts characters at specified position. Returns range of inserted characters
+    cntrl.insert(std::declval<position>(),
+                 std::declval<std::vector<typename Controller::char_t>>());
+
+    // Erases characters in specified range
+    cntrl.erase(std::declval<range>());
+
+    // Replaces characters at specified position. All replaced characters must be
+    // in the same line
+    cntrl.replace(std::declval<position>(),
+                  std::declval<std::vector<typename Controller::char_t>>());
 
 
     ////////////////////////////////////////////////////////////

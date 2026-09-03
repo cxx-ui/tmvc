@@ -91,6 +91,23 @@ public:
 
 
     ////////////////////////////////////////////////////////////
+    // Text modification
+
+    /// Inserts characters at specified position and adds insert modification
+    /// into history. Returns range of inserted characters
+    template <std::ranges::range CharsRange>
+    range insert(const position & p, CharsRange && chars);
+
+    /// Erases characters in specified range and adds erase modification into history
+    void erase(const range & r);
+
+    /// Replaces characters at specified position and adds replace modification into
+    /// history. All replaced characters must be in the same line
+    template <std::ranges::range CharsRange>
+    void replace(const position & p, CharsRange && chars);
+
+
+    ////////////////////////////////////////////////////////////
     // User actions
 
     /// Performs actions when user presses delete button
