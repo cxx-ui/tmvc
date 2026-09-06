@@ -128,6 +128,11 @@ public:
         this->setViewportMargins(left, top, right, bottom);
     }
 
+    /// Returns Qt text cursor for selection between specified model positions
+    QTextCursor cursor_for_selection(const position & anchor_pos, const position & pos) const {
+        return impl::get_qt_cursor_for_selection(this, anchor_pos, pos);
+    }
+
 protected:
     /// Calculates suggested text position for visual up/down movement
     std::optional<position> suggested_up_down_pos(bool is_up) const {
