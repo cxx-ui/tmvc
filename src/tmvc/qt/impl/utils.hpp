@@ -24,48 +24,23 @@ template <typename QtTextEdit>
 inline QTextCursor get_qt_cursor_for_selection(QtTextEdit * edit,
                                                const position & anchor_pos,
                                                const position & pos) {
-    auto cursor = edit->textCursor();
+    auto * doc = edit->document();
 
-    // moving cursor to beginning of line to reset selection
-    cursor.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor, 1);
+    // getting document block by line number for anchor
+    auto anchor_block = doc->findBlockByNumber(static_cast<int>(anchor_pos.line));
+    assert(anchor_block.isValid() && "invalid anchor position line number");
+    assert(static_cast<int>(anchor_pos.column) < anchor_block.length() &&
+           "invalid anchor position column number");
 
-    // moving up or down to specific anchor line
-    auto mdlAnchorLine = static_cast<int>(anchor_pos.line);
-    auto widgetLine = cursor.blockNumber();
-    assert(mdlAnchorLine < edit->document()->blockCount() && "invalid position line number");
-    if (widgetLine < mdlAnchorLine) {
-        cursor.movePosition(QTextCursor::NextBlock,
-                            QTextCursor::MoveAnchor,
-                            static_cast<int>(mdlAnchorLine - widgetLine));
-    } else {
-        cursor.movePosition(QTextCursor::PreviousBlock,
-                            QTextCursor::MoveAnchor,
-                            static_cast<int>(widgetLine - mdlAnchorLine));
-    }
+    // getting document block by line number for poition
+    auto block = doc->findBlockByNumber(static_cast<int>(pos.line));
+    assert(block.isValid() && "invalid position line number");
+    assert(static_cast<int>(pos.column) < block.length() && "invalid position column number");
 
-    // then moving cursor to specific anchor column
-    auto mdlAnchorCol = static_cast<int>(anchor_pos.column);
-    assert(mdlAnchorCol < cursor.block().length() && "invalid position column number");
-    cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, mdlAnchorCol);
-
-    // now moving to current line with keeping anchor
-    auto mdlLine = static_cast<int>(pos.line);
-    if (mdlAnchorLine < mdlLine) {
-        cursor.movePosition(QTextCursor::NextBlock,
-                            QTextCursor::KeepAnchor,
-                            static_cast<int>(mdlLine - mdlAnchorLine));
-    } else {
-        cursor.movePosition(QTextCursor::PreviousBlock,
-                            QTextCursor::KeepAnchor,
-                            static_cast<int>(mdlAnchorLine - mdlLine));
-    }
-
-    // moving cursor to beginning of line with keeping anchor
-    cursor.movePosition(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor, 1);
-
-    // finally moving cursor to specific anchor column
-    auto mdlCol = static_cast<int>(pos.column);
-    cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, mdlCol);
+    // creating cursor for selection
+    QTextCursor cursor{doc};
+    cursor.setPosition(anchor_block.position() + static_cast<int>(anchor_pos.column));
+    cursor.setPosition(block.position() + static_cast<int>(pos.column), QTextCursor::KeepAnchor);
 
     return cursor;
 }
