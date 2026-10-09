@@ -411,7 +411,16 @@ private:
         }
 
         is_updating_view_ = true;
+
+        // disabling moving of cursor, it is moved by selection model if required
+        auto view_cursor = this->textCursor();
+        view_cursor.setKeepPositionOnInsert(true);
+        this->setTextCursor(view_cursor);
+
         auto cursor = impl::get_qt_cursor_for_selection(this, r.start, r.start);
+        auto insert_pos = cursor.position();
+        auto anchor_at_insert_pos = view_cursor.anchor() == insert_pos;
+
         if constexpr (text_character<typename Model::char_t> &&
                       !std_character<typename Model::char_t>) {
             auto chars = characters_vector(text_, r);
@@ -420,6 +429,19 @@ private:
             auto chars = impl::chars_to_qstring(characters(text_, r));
             cursor.insertText(chars);
         }
+
+        view_cursor = this->textCursor();
+        view_cursor.setKeepPositionOnInsert(false);
+
+        // Qt moves anchor after inserted text, restoring it to cursor position
+        if (anchor_at_insert_pos) {
+            auto pos = view_cursor.position();
+            view_cursor.setPosition(insert_pos);
+            view_cursor.setPosition(pos, QTextCursor::KeepAnchor);
+        }
+
+        this->setTextCursor(view_cursor);
+
         is_updating_view_ = false;
     }
 
